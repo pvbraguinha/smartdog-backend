@@ -1,3 +1,5 @@
+<?php
+
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -45,5 +47,3 @@ Route::get('/check-env', function () {
 Route::get('/debug-config', function () {
     return response()->json(config('app'));
 });
-
-
