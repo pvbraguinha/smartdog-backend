@@ -17,4 +17,7 @@ require __DIR__.'/../vendor/autoload.php';
 /** @var Application $app */
 $app = require_once __DIR__.'/../bootstrap/app.php';
 
+// Debug: verificar se APP_KEY está carregada
+dd(env('APP_KEY'));
+
 $app->handleRequest(Request::capture());
