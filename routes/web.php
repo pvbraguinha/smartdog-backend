@@ -1,4 +1,3 @@
-<?php
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -29,22 +28,22 @@ Route::get('/clear-cache', function () {
     return 'Cache limpo!';
 });
 
-// Rota para depurar APP_KEY em várias formas de acesso
+// Rota para depurar APP_KEY e variáveis de ambiente em várias formas de acesso
 Route::get('/check-env', function () {
     return response()->json([
+        'APP_ENV' => env('APP_ENV', 'não definida'),
         'APP_KEY_env' => env('APP_KEY', 'Não encontrada via env()'),
         'APP_KEY_getenv' => getenv('APP_KEY') ?: 'Não encontrada via getenv()',
         'APP_KEY_server' => $_SERVER['APP_KEY'] ?? 'Não encontrada via $_SERVER',
         'APP_KEY_env_array' => $_ENV['APP_KEY'] ?? 'Não encontrada via $_ENV',
-    ]);
-});
-
-Route::get('/check-env', function () {
-    return response()->json([
-        'APP_ENV' => env('APP_ENV', 'não definida'),
-        'APP_KEY' => env('APP_KEY', 'não definida'),
         'APP_DEBUG' => env('APP_DEBUG', 'não definido'),
         'APP_URL' => env('APP_URL', 'não definida'),
     ]);
 });
+
+// Rota para mostrar toda a configuração do app (config/app.php)
+Route::get('/debug-config', function () {
+    return response()->json(config('app'));
+});
+
 
