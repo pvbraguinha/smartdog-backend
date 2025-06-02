@@ -8,3 +8,10 @@ Route::get('/', function () {
 
 // 🔻 COMENTE ou REMOVA a rota antiga do reconhecimento
 // Route::post('/snout-recognition', [SnoutRecognitionController::class, 'detect']);
+
+// Rota para debug da APP_KEY
+Route::get('/debug-app-key', function () {
+    return response()->json([
+        'app_key' => env('APP_KEY'),
+    ]);
+});
