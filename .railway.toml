@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+buildCommand = "composer install --optimize-autoloader --no-dev && php artisan config:cache && php artisan route:cache"
+
+[deploy]
+startCommand = "php artisan serve --host=0.0.0.0 --port=$PORT"
+healthcheckPath = "/"
+healthcheckTimeout = 100
