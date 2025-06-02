@@ -1,5 +1,4 @@
 <?php
-
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
@@ -29,3 +28,14 @@ Route::get('/clear-cache', function () {
     Artisan::call('config:cache');
     return 'Cache limpo!';
 });
+
+// Rota para depurar APP_KEY em várias formas de acesso
+Route::get('/check-env', function () {
+    return response()->json([
+        'APP_KEY_env' => env('APP_KEY', 'Não encontrada via env()'),
+        'APP_KEY_getenv' => getenv('APP_KEY') ?: 'Não encontrada via getenv()',
+        'APP_KEY_server' => $_SERVER['APP_KEY'] ?? 'Não encontrada via $_SERVER',
+        'APP_KEY_env_array' => $_ENV['APP_KEY'] ?? 'Não encontrada via $_ENV',
+    ]);
+});
+
