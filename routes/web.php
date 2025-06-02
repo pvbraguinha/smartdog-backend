@@ -39,3 +39,12 @@ Route::get('/check-env', function () {
     ]);
 });
 
+Route::get('/check-env', function () {
+    return response()->json([
+        'APP_ENV' => env('APP_ENV', 'não definida'),
+        'APP_KEY' => env('APP_KEY', 'não definida'),
+        'APP_DEBUG' => env('APP_DEBUG', 'não definido'),
+        'APP_URL' => env('APP_URL', 'não definida'),
+    ]);
+});
+
