@@ -12,3 +12,12 @@ Route::post('/dogs/{id}/location', [DogLocationController::class, 'update']);
 Route::get('/user/history', [UserHistoryController::class, 'index']);
 Route::post('/dogs', [DogRegistrationController::class, 'store']);
 
+// Rota para testar APP_KEY no ambiente
+Route::get('/app-key-test', function () {
+    return response()->json([
+        'APP_KEY' => env('APP_KEY', 'Não encontrada'),
+    ]);
+});
+
+
+
