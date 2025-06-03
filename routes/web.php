@@ -47,3 +47,7 @@ Route::get('/check-env', function () {
 Route::get('/debug-config', function () {
     return response()->json(config('app'));
 });
+
+Route::get('/check-key', function () {
+    return config('app.key');
+});
