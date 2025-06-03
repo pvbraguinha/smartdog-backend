@@ -7,5 +7,5 @@ startCommand = "php artisan key:generate --force && php artisan serve --host=0.0
 restartPolicyType = "ON_FAILURE"
 
 [variables]
-APP_KEY = "base64:YFhZyVN4rB4rlcP8ZzupSYC/em/1+iJD63E1dyFeXZ8="
+APP_KEY = "base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ="
 
