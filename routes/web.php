@@ -7,12 +7,9 @@ Route::get('/', function () {
     return response()->json(['message' => 'SmartDog API is working!']);
 });
 
-// 🔻 COMENTE ou REMOVA a rota antiga do reconhecimento
-// Route::post('/snout-recognition', [SnoutRecognitionController::class, 'detect']);
-
 // Rota simples para teste básico
-Route::get('/hello', function () {
-    return 'Hello from Laravel!';
+Route::get('/ping', function () {
+    return response()->json(['message' => 'pong']);
 });
 
 // Rota para debug da APP_KEY
@@ -30,7 +27,7 @@ Route::get('/clear-cache', function () {
     return 'Cache limpo!';
 });
 
-// Rota para depurar APP_KEY e variáveis de ambiente em várias formas de acesso
+// Rota para depurar APP_KEY e variáveis de ambiente
 Route::get('/check-env', function () {
     return response()->json([
         'APP_ENV' => env('APP_ENV', 'não definida'),
@@ -43,11 +40,7 @@ Route::get('/check-env', function () {
     ]);
 });
 
-// Rota para mostrar toda a configuração do app (config/app.php)
-Route::get('/debug-config', function () {
-    return response()->json(config('app'));
-});
-
+// Rota para mostrar a chave diretamente da config
 Route::get('/check-key', function () {
     return config('app.key');
 });
