@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
 # Instala dependências
 RUN apt-get update && apt-get install -y \
@@ -18,12 +18,13 @@ COPY . .
 # Instala dependências do Laravel
 RUN composer install --optimize-autoloader --no-dev
 
-# Remove cache de configuração antigo
+# Remove cache antigo
 RUN rm -rf bootstrap/cache/config.php
 
-# Exponha a porta padrão do PHP-FPM
-EXPOSE 9000
+# Exponha a porta usada pelo servidor embutido
+EXPOSE 8080
 
-# Roda o PHP-FPM em produção
-CMD ["php-fpm"]
+# Usa o servidor embutido do PHP, ideal para Railway
+CMD php artisan config:clear && php artisan cache:clear && php -S 0.0.0.0:${PORT:-8080} -t public
+
 
