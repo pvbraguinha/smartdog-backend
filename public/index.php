@@ -1,5 +1,10 @@
 <?php
 
+// Força a APP_KEY manualmente (evita erro de MissingAppKeyException)
+putenv("APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=");
+$_ENV['APP_KEY'] = 'base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=';
+$_SERVER['APP_KEY'] = 'base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=';
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 
