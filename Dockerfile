@@ -16,10 +16,15 @@ COPY . .
 # Define APP_KEY diretamente
 ENV APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
 
+# Garante permissões
+RUN chmod -R 755 storage bootstrap/cache
+
+# Instala dependências do Laravel
 RUN composer install --no-scripts --no-plugins --optimize-autoloader --ignore-platform-reqs
 
-# Expõe porta padrão usada pelo Railway
+# Expõe a porta padrão
 EXPOSE 8080
 
-CMD bash -c "php artisan serve --host=0.0.0.0 --port=${PORT:-8080}"
+# Usa servidor PHP embutido em vez do artisan serve
+CMD ["php", "-S", "0.0.0.0:8080", "-t", "public"]
 
