@@ -18,7 +18,7 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
-    'key' => env('APP_KEY'),
+    'key' => env('APP_KEY', 'base64::YFhZyVN4rB4rlcP8ZzupSYC/em/1+iJD63E1dyFeXZ8='),
 
     'previous_keys' => explode(',', env('APP_PREVIOUS_KEYS', '')),
 
