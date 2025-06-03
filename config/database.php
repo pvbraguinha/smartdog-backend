@@ -72,7 +72,7 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'require',
-            'options' => extension_loaded('pdo_pgsql') ? [
+            'options' => defined('PDO::PGSQL_ATTR_SSL_MODE') ? [
                 PDO::ATTR_PERSISTENT => true,
                 PDO::PGSQL_ATTR_SSL_MODE => 'require',
             ] : [],
