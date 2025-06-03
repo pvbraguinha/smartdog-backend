@@ -22,9 +22,10 @@ RUN composer install --optimize-autoloader --no-dev
 RUN rm -rf bootstrap/cache/config.php
 
 # Exponha a porta usada pelo servidor embutido
-EXPOSE 8080
+EXPOSE 10000
 
-# Usa o servidor embutido do PHP, ideal para Railway
-CMD php artisan config:clear && php artisan cache:clear && php -S 0.0.0.0:${PORT:-8080} -t public
+# Usa o servidor embutido do PHP na porta 10000 (requerida pela Render)
+CMD php artisan config:clear && php artisan cache:clear && php -S 0.0.0.0:10000 -t public
+
 
 
