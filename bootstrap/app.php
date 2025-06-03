@@ -6,18 +6,19 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-$dotenv = Dotenv\Dotenv::createImmutable(dirname(__DIR__));
+// 🔥 Força uso do .env.production se existir
+$envPath = dirname(__DIR__);
+
+if (file_exists($envPath . '/.env.production')) {
+    $dotenv = Dotenv\Dotenv::createImmutable($envPath, '.env.production');
+} else {
+    $dotenv = Dotenv\Dotenv::createImmutable($envPath);
+}
+
 $dotenv->safeLoad();
 
-return Application::configure(basePath: dirname(__DIR__))
+return Application::configure(basePath: $envPath)
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
-        health: '/up',
-    )
-    ->withMiddleware(function (Middleware $middleware) {
-        //
-    })
-    ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+
