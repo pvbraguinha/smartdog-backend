@@ -1,9 +1,10 @@
 FROM php:8.2-fpm
 
-# Instala dependências do sistema incluindo suporte ao PostgreSQL
+# Instala dependências
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libpq-dev \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring exif pcntl bcmath gd
+    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
+    libonig-dev libxml2-dev libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Instala o Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -14,14 +15,15 @@ WORKDIR /var/www
 # Copia os arquivos do projeto
 COPY . .
 
-# Remove cache de configuração do Laravel (caso exista)
-RUN rm -rf bootstrap/cache/config.php
-
-# Instala dependências do Laravel em modo produção
+# Instala dependências do Laravel
 RUN composer install --optimize-autoloader --no-dev
 
-# Expõe a porta padrão
-EXPOSE 8080
+# Remove cache de configuração antigo
+RUN rm -rf bootstrap/cache/config.php
 
-# Substitui o comando anterior que causava erro
+# Exponha a porta padrão do PHP-FPM
+EXPOSE 9000
+
+# Roda o PHP-FPM em produção
 CMD ["php-fpm"]
+
