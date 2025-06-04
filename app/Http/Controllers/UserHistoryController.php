@@ -3,32 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Dog;
 
 class UserHistoryController extends Controller
 {
     public function index(Request $request)
     {
-        $search = $request->query('search');
-        $date = $request->query('date');
-
-        $mockHistory = [
-            [
-                'dog_id' => 101,
-                'name' => 'Rex',
-                'status' => 'em_casa',
-                'recognized_at' => '2025-06-01 14:32'
-            ],
-            [
-                'dog_id' => 102,
-                'name' => 'Luna',
-                'status' => 'perdido',
-                'recognized_at' => '2025-06-02 09:18'
-            ]
-        ];
+        $dogs = Dog::orderBy('created_at', 'desc')->get(['id as dog_id', 'name', 'status', 'created_at as recognized_at']);
 
         return response()->json([
             'success' => true,
-            'history' => $mockHistory
+            'history' => $dogs
         ]);
     }
 }

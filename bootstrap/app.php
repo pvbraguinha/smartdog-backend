@@ -1,26 +1,20 @@
 <?php
-
-// 🔐 Força a APP_KEY antes de qualquer coisa
-putenv("APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=");
-$_ENV['APP_KEY'] = 'base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=';
-$_SERVER['APP_KEY'] = 'base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=';
+require_once __DIR__.'/../vendor/autoload.php';
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
-require_once dirname(__DIR__) . '/vendor/autoload.php';
-
-// 🔧 Força uso do .env.production se existir
 $envPath = dirname(__DIR__);
 
-if (file_exists($envPath . '/.env.production')) {
-    $dotenv = Dotenv\Dotenv::createImmutable($envPath, '.env.production');
-} else {
-    $dotenv = Dotenv\Dotenv::createImmutable($envPath);
-}
-
+// Carrega somente o .env normal
+$dotenv = Dotenv\Dotenv::createImmutable($envPath);
 $dotenv->safeLoad();
+
+// Força APP_KEY para teste
+putenv("APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=");
+$_ENV['APP_KEY'] = 'base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=';
+$_SERVER['APP_KEY'] = 'base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=';
 
 return Application::configure(basePath: $envPath)
     ->withRouting(
@@ -35,5 +29,6 @@ return Application::configure(basePath: $envPath)
         //
     })
     ->create();
+
 
 

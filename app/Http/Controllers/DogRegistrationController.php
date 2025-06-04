@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use App\Models\Dog;
 
 class DogRegistrationController extends Controller
 {
@@ -17,21 +18,35 @@ class DogRegistrationController extends Controller
             'owner_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
             'email' => 'nullable|email|max:255',
-            'photo' => 'nullable|image|max:5120'
-        ], [
-            'name.required' => 'O nome do animal é obrigatório.',
-            'owner_name.required' => 'O nome do proprietário é obrigatório.',
-            'phone.required' => 'O telefone é obrigatório.',
-            'gender.in' => 'O gênero deve ser "macho" ou "femea".',
-            'photo.image' => 'A foto deve ser uma imagem válida.'
+            'photo_base64' => 'nullable|string'
         ]);
 
-        Log::info('🐶 Novo animal registrado:', $validated);
+        $photoUrl = null;
+
+        if (!empty($validated['photo_base64'])) {
+            $imageData = base64_decode($validated['photo_base64']);
+            $filename = 'snouts/' . uniqid() . '.jpg';
+            Storage::disk('public')->put($filename, $imageData);
+            $photoUrl = asset('storage/' . $filename);
+        }
+
+        $dog = Dog::create([
+            'name' => $validated['name'],
+            'age' => $validated['age'] ?? null,
+            'gender' => $validated['gender'] ?? null,
+            'breed' => $validated['breed'] ?? null,
+            'owner_name' => $validated['owner_name'],
+            'phone' => $validated['phone'],
+            'email' => $validated['email'] ?? null,
+            'photo_url' => $photoUrl,
+            'status' => 'em_casa',
+            'show_phone' => true,
+        ]);
 
         return response()->json([
             'success' => true,
-            'message' => 'Animal registrado com sucesso (simulado)',
-            'data' => $validated
+            'message' => 'Animal registrado com sucesso!',
+            'data' => $dog
         ]);
     }
 }

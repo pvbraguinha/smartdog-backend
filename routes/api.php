@@ -8,24 +8,35 @@ use App\Http\Controllers\DogLocationController;
 use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
 
+//  Teste simples de status da API
+Route::get('/test', function () {
+    return response()->json(['status' => 'API est no ar!']);
+});
+
+// routes/api.php
+Route::post('/test-post', function () {
+    return response()->json(['message' => 'POST funcionando']);
+});
+
+//  Rotas da aplicao (sem autenticao por enquanto)
+Route::post('/dogs', [DogRegistrationController::class, 'store']);
 Route::post('/snout-recognition', [SnoutRecognitionController::class, 'detect']);
 Route::post('/dogs/{id}/location', [DogLocationController::class, 'update']);
 Route::get('/user/history', [UserHistoryController::class, 'index']);
-Route::post('/dogs', [DogRegistrationController::class, 'store']);
 
-// Rota para testar APP_KEY no ambiente
+//  Teste de APP_KEY (opcional)
 Route::get('/app-key-test', function () {
     return response()->json([
-        'APP_KEY' => env('APP_KEY', 'Não encontrada'),
+        'APP_KEY' => env('APP_KEY', 'No encontrada'),
     ]);
 });
 
-// Rota para testar conexão com banco de dados e variáveis relacionadas
+//  Teste de conexo com banco de dados
 Route::get('/test-db-connection', function (Request $request) {
     try {
         DB::connection()->getPdo();
         return response()->json([
-            'message' => 'Conexão com banco OK',
+            'message' => 'Conexo com banco OK',
             'db_host' => env('DB_HOST'),
             'db_username' => env('DB_USERNAME'),
             'db_password_set' => !empty(env('DB_PASSWORD')),
@@ -41,6 +52,9 @@ Route::get('/test-db-connection', function (Request $request) {
         ], 500);
     }
 });
+
+
+
 
 
 
