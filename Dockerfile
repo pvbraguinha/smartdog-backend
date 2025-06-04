@@ -25,7 +25,6 @@ RUN rm -rf bootstrap/cache/config.php
 EXPOSE 10000
 
 # Usa o servidor embutido do PHP na porta 10000 (requerida pela Render)
-RUN php artisan config:clear && php artisan cache:clear
 CMD php artisan config:clear && php artisan cache:clear && php -S 0.0.0.0:10000 -t public
 
 
