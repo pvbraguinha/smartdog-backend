@@ -73,6 +73,7 @@ return [
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', null),
             'options' => defined('PDO::PGSQL_ATTR_SSL_MODE') && env('DB_SSLMODE') ? [
+                'sslmode' => env('DB_SSLMODE', 'prefer'),
                 PDO::PGSQL_ATTR_SSL_MODE => env('DB_SSLMODE'),
             ] : [],
         ],
