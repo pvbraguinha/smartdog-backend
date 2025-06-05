@@ -66,15 +66,14 @@ return [
             'database' => env('DB_DATABASE', 'forge'),
             'username' => env('DB_USERNAME', 'forge'),
             'password' => env('DB_PASSWORD', ''),
-            'charset' => env('DB_CHARSET', 'utf8'),
+            'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode' => env('DB_SSLMODE', null),
-            'options' => defined('PDO::PGSQL_ATTR_SSL_MODE') && env('DB_SSLMODE') ? [
-                'sslmode' => env('DB_SSLMODE', 'prefer'),
-                PDO::PGSQL_ATTR_SSL_MODE => env('DB_SSLMODE'),
-            ] : [],
+            'sslmode' => env('DB_SSLMODE', 'require'),
+            'options' => extension_loaded('pdo_pgsql') ? array_filter([
+                PDO::PGSQL_ATTR_SSL_MODE => env('DB_SSLMODE', 'require'),
+            ]) : [],
         ],
 
         'sqlsrv' => [
@@ -128,4 +127,3 @@ return [
     ],
 
 ];
-
