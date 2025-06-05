@@ -1,9 +1,9 @@
-databases:
-  - name: smartdog-db
+services:
+  - type: pserv
+    name: smartdog-db
     plan: free
     region: frankfurt
 
-services:
   - type: web
     name: smartdog-backend
     env: docker
