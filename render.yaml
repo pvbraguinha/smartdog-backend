@@ -2,9 +2,9 @@ services:
   - type: web
     name: smartdog-backend
     env: docker
+    plan: starter
     repo: https://github.com/pvbraguinha/smartdog-backend
     branch: main
-    plan: starter
     autoDeploy: true
     dockerContext: .
     dockerfilePath: Dockerfile
@@ -20,23 +20,19 @@ services:
       - key: DB_HOST
         fromService:
           name: smartdog-db
+          type: pserv
           property: host
       - key: DB_PORT
         fromService:
           name: smartdog-db
+          type: pserv
           property: port
+      - key: DB_DATABASE
+        value: martdog_db
       - key: DB_USERNAME
-        fromService:
-          name: smartdog-db
-          property: connectionString
+        value: martdog_db_user
       - key: DB_PASSWORD
-        fromService:
-          name: smartdog-db
-          property: connectionString
-      - key: DATABASE_URL
-        fromService:
-          name: smartdog-db
-          property: connectionString
+        value: dLr842YglHqJ6bTvf9c0V8CTFg76I4rQ
       - key: APP_KEY
         generateValue: true
 
