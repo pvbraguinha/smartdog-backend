@@ -8,10 +8,6 @@ services:
     autoDeploy: true
     dockerContext: .
     dockerfilePath: Dockerfile
-    startCommand: >
-      php artisan config:clear &&
-      php artisan migrate --force &&
-      php -S 0.0.0.0:10000 -t public
     envVars:
       - key: APP_ENV
         value: production
@@ -24,12 +20,11 @@ services:
       - key: DB_HOST
         fromService:
           name: smartdog-db
+          property: host
       - key: DB_PORT
-        value: 5432
-      - key: DB_DATABASE
         fromService:
           name: smartdog-db
-          property: databaseName
+          property: port
       - key: DB_USERNAME
         fromService:
           name: smartdog-db
@@ -38,6 +33,10 @@ services:
         fromService:
           name: smartdog-db
           property: password
+      - key: DATABASE_URL
+        fromService:
+          name: smartdog-db
+          property: connectionString
       - key: APP_KEY
         generateValue: true
 
@@ -45,5 +44,3 @@ databases:
   - name: smartdog-db
     plan: free
     region: frankfurt
-    databaseName: martdog_db
-    user: martdog_db_user
