@@ -23,7 +23,9 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: postgres
+        fromDatabase:
+          name: smartdog-db
+          property: host
       - key: DB_PORT
         fromDatabase:
           name: smartdog-db
@@ -42,3 +44,4 @@ services:
           property: password
       - key: APP_KEY
         generateValue: true
+
