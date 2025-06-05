@@ -16,7 +16,7 @@ WORKDIR /var/www
 COPY . .
 
 # Instala dependências do Laravel
-RUN composer install --optimize-autoloader --no-dev
+RUN COMPOSER_ALLOW_SUPERUSER=1 composer install --no-scripts --optimize-autoloader --no-dev
 
 # Remove cache antigo
 RUN rm -rf bootstrap/cache/config.php
