@@ -1,9 +1,9 @@
-services:
-  - type: pserv
-    name: smartdog-db
+databases:
+  - name: smartdog-db
     plan: free
     region: frankfurt
 
+services:
   - type: web
     name: smartdog-backend
     env: docker
@@ -23,15 +23,9 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        fromService:
-          name: smartdog-db
-          type: pserv
-          property: host
+        value: dpg-d0vg48ffte5s739l7ik0-a.internal
       - key: DB_PORT
-        fromService:
-          name: smartdog-db
-          type: pserv
-          property: port
+        value: 5432
       - key: DB_DATABASE
         value: martdog_db
       - key: DB_USERNAME
