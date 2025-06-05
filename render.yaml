@@ -1,0 +1,49 @@
+services:
+  - type: web
+    name: smartdog-backend
+    env: docker
+    repo: https://github.com/pvbraguinha/smartdog-backend
+    branch: main
+    plan: starter
+    autoDeploy: true
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    startCommand: >
+      php artisan config:clear &&
+      php artisan migrate --force &&
+      php -S 0.0.0.0:10000 -t public
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_URL
+        value: https://smartdog-backend.onrender.com
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        fromService:
+          name: smartdog-db
+      - key: DB_PORT
+        value: 5432
+      - key: DB_DATABASE
+        fromService:
+          name: smartdog-db
+          property: databaseName
+      - key: DB_USERNAME
+        fromService:
+          name: smartdog-db
+          property: user
+      - key: DB_PASSWORD
+        fromService:
+          name: smartdog-db
+          property: password
+      - key: APP_KEY
+        generateValue: true
+
+databases:
+  - name: smartdog-db
+    plan: free
+    region: frankfurt
+    databaseName: martdog_db
+    user: martdog_db_user
