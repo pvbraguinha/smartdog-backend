@@ -1,18 +1,13 @@
-#!/bin/bash
+#!/bin/sh
 
-# Aguarda conexão com o banco
-echo "Esperando o PostgreSQL ficar disponível em $DB_HOST:5432..."
-until nc -z "$DB_HOST" 5432; do
-  echo "Ainda sem conexão... tentando novamente..."
-  sleep 2
-done
+# Aguarda conexão com o banco via script separado
+sh /wait-for-db.sh
 
-echo "PostgreSQL está acessível. Continuando o deploy..."
+echo "🎯 Configurando Laravel..."
 
-# Comandos Laravel
 php artisan config:clear
 php artisan config:cache
 php artisan migrate --force || true
 
-# Sobe o servidor
+echo "🚀 Iniciando servidor PHP-FPM..."
 php-fpm

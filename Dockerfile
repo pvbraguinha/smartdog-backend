@@ -21,9 +21,10 @@ RUN composer install --optimize-autoloader --no-dev
 # Remove cache antigo
 RUN rm -rf bootstrap/cache/config.php
 
-# Copia o script de entrada e dá permissão
+# Copia os scripts de entrada e dá permissão
+COPY wait-for-db.sh /wait-for-db.sh
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /wait-for-db.sh /entrypoint.sh
 
 # Expõe a porta usada pelo servidor PHP embutido (requerida pela Render)
 EXPOSE 10000
