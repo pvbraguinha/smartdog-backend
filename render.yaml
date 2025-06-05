@@ -1,5 +1,5 @@
 databases:
-  - name: smartdog-db
+  - name: postgres
     plan: free
     region: frankfurt
 
@@ -23,24 +23,22 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        fromDatabase:
-          name: smartdog-db
-          property: host
+        value: postgres
       - key: DB_PORT
         fromDatabase:
-          name: smartdog-db
+          name: postgres
           property: port
       - key: DB_DATABASE
         fromDatabase:
-          name: smartdog-db
+          name: postgres
           property: database
       - key: DB_USERNAME
         fromDatabase:
-          name: smartdog-db
+          name: postgres
           property: user
       - key: DB_PASSWORD
         fromDatabase:
-          name: smartdog-db
+          name: postgres
           property: password
       - key: APP_KEY
         generateValue: true
