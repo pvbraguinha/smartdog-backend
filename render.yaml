@@ -23,14 +23,24 @@ services:
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_HOST
-        value: dpg-d0vg48ffte5s739l7ik0-a.internal
+        fromDatabase:
+          name: smartdog-db
+          property: host
       - key: DB_PORT
-        value: 5432
+        fromDatabase:
+          name: smartdog-db
+          property: port
       - key: DB_DATABASE
-        value: martdog_db
+        fromDatabase:
+          name: smartdog-db
+          property: database
       - key: DB_USERNAME
-        value: martdog_db_user
+        fromDatabase:
+          name: smartdog-db
+          property: user
       - key: DB_PASSWORD
-        value: dLr842YglHqJ6bTvf9c0V8CTFg76I4rQ
+        fromDatabase:
+          name: smartdog-db
+          property: password
       - key: APP_KEY
         generateValue: true
