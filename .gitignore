@@ -3,6 +3,7 @@
 .env.backup
 .phpactor.json
 .phpunit.result.cache
+.env
 /.fleet
 /.idea
 /.nova
