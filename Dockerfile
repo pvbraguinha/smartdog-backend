@@ -27,5 +27,9 @@ EXPOSE 10000
 # Usa o servidor embutido do PHP na porta 10000 (requerida pela Render)
 CMD php artisan config:clear && php artisan cache:clear && php -S 0.0.0.0:10000 -t public
 
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 
