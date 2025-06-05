@@ -32,4 +32,13 @@ RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
+# Instala o netcat para o script funcionar
+RUN apk add --no-cache netcat-openbsd
+
+# Copia o script de entrada e dá permissão
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
 
