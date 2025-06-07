@@ -17,10 +17,10 @@ DB_USERNAME=smartdog_db_fnp8_user
 DB_PASSWORD=0SMTQjMgkWVSii6sUumnTXNfBp8qweKd
 EOF
 
-# Força leitura do .env antes de qualquer comando Laravel
+# Copia o .env para o diretório raiz da aplicação Laravel
 cp .env /var/www/.env
 
-# Exporta APP_KEY para evitar falha por cache incompleto
+# Exporta APP_KEY para garantir fallback no ambiente
 export APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
 
 echo "Aguardando PostgreSQL em dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com:5432..."
@@ -47,4 +47,3 @@ php artisan migrate --force
 # Iniciar servidor embutido Laravel
 echo "Iniciando servidor embutido Laravel..."
 php -S 0.0.0.0:10000 -t public
-
