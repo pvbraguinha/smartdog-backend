@@ -1,9 +1,9 @@
-FROM php:8.2-cli
+FROM php:8.2-fpm
 
 # Instala dependências do sistema e extensões PHP
-RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev \
-    libonig-dev libxml2-dev libpq-dev netcat-openbsd \
+RUN apt-get update && apt-get install -y
+    git curl zip unzip libpng-dev libjpeg-dev libfreetype6-dev
+    libonig-dev libxml2-dev libpq-dev netcat-openbsd
     && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd
 
 # Instala o Composer
@@ -30,6 +30,3 @@ EXPOSE 10000
 
 # Define o ponto de entrada
 ENTRYPOINT ["/entrypoint.sh"]
-
-
-

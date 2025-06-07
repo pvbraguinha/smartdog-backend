@@ -15,17 +15,15 @@ services:
     dockerContext: .
     dockerfilePath: Dockerfile
     envVars:
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: false
-      - key: APP_URL
-        value: https://smartdog-backend.onrender.com
-      - key: APP_KEY
-        generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: smartdog-db
-          property: connectionString
-    databases:
-      - name: smartdog-db
+  - key: APP_ENV
+    value: production
+  - key: APP_DEBUG
+    value: false
+  - key: APP_URL
+    value: https://smartdog-backend.onrender.com
+  - key: APP_KEY
+    value: base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
+  - key: DATABASE_URL
+    fromDatabase:
+      name: smartdog-db
+      property: connectionString

@@ -67,7 +67,7 @@ return [
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
-        
+
         // Adicione o novo provider aqui, no final do array
         App\Providers\DatabaseConnectionFixProvider::class,
     ],
