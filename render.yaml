@@ -1,21 +1,14 @@
-databases:
-  - name: smartdog-db
-    plan: free
-    region: frankfurt
-
 services:
   - type: web
     name: smartdog-backend
     env: docker
     plan: starter
-    region: frankfurt  # <- ESSENCIAL!
+    region: frankfurt
     repo: https://github.com/pvbraguinha/smartdog-backend
     branch: main
     autoDeploy: true
     dockerContext: .
     dockerfilePath: Dockerfile
-    databases:        # <- ESSENCIAL!
-      - name: smartdog-db
     envVars:
       - key: DATABASE_URL
         value: postgresql://smartdog_db_fnp8_user:0SMTQjMgkWVSii6sUumnTXNfBp8qweKd@dpg-d10v3rm3jp1c739d1ae0-a.internal:5432/smartdog_db_fnp8
