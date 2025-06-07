@@ -11,6 +11,13 @@ export DB_DATABASE="smartdog_db_fnp8"
 export DB_USERNAME="smartdog_db_fnp8_user"
 export DB_PASSWORD="0SMTQjMgkWVSii6sUumnTXNfBp8qweKd"
 
+# Verificar e gerar APP_KEY se necessário
+if [ -z "$APP_KEY" ]; then
+  echo "Gerando APP_KEY..."
+  export APP_KEY=$(php artisan key:generate --show)
+  echo "APP_KEY gerada: $APP_KEY"
+fi
+
 echo "Aguardando PostgreSQL em $DB_HOST:$DB_PORT..."
 
 for i in $(seq 1 60); do
@@ -23,6 +30,9 @@ echo "Banco disponivel. Iniciando Laravel..."
 
 # Limpar cache de configuração e recriar
 php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
+php artisan route:clear
 php artisan config:cache
 
 # Executar migrações
