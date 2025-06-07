@@ -23,6 +23,10 @@ Route::get('/status', function () {
     return response()->json(['message' => 'SmartDog API is working!']);
 });
 
+Route::get('/', function () {
+    return response()->json(['message' => 'SmartDog API is working!']);
+});
+
 //  Rotas da aplicao (sem autenticao por enquanto)
 Route::post('/dogs', [DogRegistrationController::class, 'store']);
 Route::post('/snout-recognition', [SnoutRecognitionController::class, 'detect']);
