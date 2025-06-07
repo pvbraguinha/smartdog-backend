@@ -7,9 +7,6 @@ use App\Http\Controllers\DogLocationController;
 use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
 
-Route::middleware([])->get('/', function () {
-    return response()->json(['message' => 'SmartDog API is working!']);
-});
 
 // Rotas principais do sistema
 Route::post('/snout-recognition', [SnoutRecognitionController::class, 'detect']);
