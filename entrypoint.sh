@@ -17,6 +17,9 @@ DB_USERNAME=smartdog_db_fnp8_user
 DB_PASSWORD=0SMTQjMgkWVSii6sUumnTXNfBp8qweKd
 EOF
 
+# Força leitura do .env antes de qualquer comando Laravel
+cp .env /var/www/.env
+
 # Exporta APP_KEY para evitar falha por cache incompleto
 export APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
 
@@ -44,3 +47,4 @@ php artisan migrate --force
 # Iniciar servidor embutido Laravel
 echo "Iniciando servidor embutido Laravel..."
 php -S 0.0.0.0:10000 -t public
+
