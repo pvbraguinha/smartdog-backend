@@ -16,7 +16,13 @@ DB_USERNAME=smartdog_db_fnp8_user
 DB_PASSWORD=0SMTQjMgkWVSii6sUumnTXNfBp8qweKd
 EOF
 
+# Exporta APP_KEY para estar disponível no ambiente do shell
 export APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
+
+# Mostra APP_KEY no terminal (para depuração)
+echo "APP_KEY lida pelo shell: $APP_KEY"
+echo "Conteúdo do .env:"
+cat .env
 
 echo "Aguardando PostgreSQL em dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com:5432..."
 for i in $(seq 1 60 ); do
