@@ -18,7 +18,7 @@ Route::post('/test-post', function () {
     return response()->json(['message' => 'POST funcionando']);
 });
 
-Route::middleware([])->get('/', function () {
+Route::get('/', function () {
     return response()->json(['message' => 'SmartDog API is working!']);
 });
 
