@@ -9,20 +9,21 @@ return [
     'connections' => [
 
         'pgsql' => [
-            'driver' => 'pgsql',
-            'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', 'dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com'),
-            'port' => env('DB_PORT', '5432'),
-            'database' => env('DB_DATABASE', 'smartdog_db_fnp8'),
-            'username' => env('DB_USERNAME', 'smartdog_db_fnp8_user'),
-            'password' => env('DB_PASSWORD', '0SMTQjMgkWVSii6sUumnTXNfBp8qweKd'),
-            'charset' => 'utf8',
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'search_path' => 'public',
-            'sslmode' => 'require',
-            'options' => extension_loaded('pdo_pgsql') ? [] : [],
-        ],
+    'driver' => 'pgsql',
+    'url' => env('DATABASE_URL'),
+    'host' => 'dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com',
+    'port' => '5432',
+    'database' => 'smartdog_db_fnp8',
+    'username' => 'smartdog_db_fnp8_user',
+    'password' => '0SMTQjMgkWVSii6sUumnTXNfBp8qweKd',
+    'charset' => 'utf8',
+    'prefix' => '',
+    'prefix_indexes' => true,
+    'search_path' => 'public',
+    'sslmode' => 'require',
+    'options' => extension_loaded('pdo_pgsql') ? [] : [],
+],
+
 
     ],
 

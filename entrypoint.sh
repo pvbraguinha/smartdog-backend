@@ -1,19 +1,25 @@
 #!/bin/sh
 
-# Usar endereço externo do banco de dados
-echo "Usando endereço externo do banco de dados"
+# Criar arquivo .env com as configurações corretas
+echo "Criando arquivo .env com as configurações corretas..."
+cat > .env << EOF
+APP_NAME=Smartdog
+APP_ENV=production
+APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
+APP_DEBUG=true
+APP_URL=https://smartdog-backend.onrender.com
 
-# Configurar variáveis de ambiente diretamente no arquivo .env
-echo "Atualizando arquivo .env com as configurações corretas..."
-sed -i "s|DB_HOST=.*|DB_HOST=dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com|g" .env
-sed -i "s|DB_PORT=.*|DB_PORT=5432|g" .env
-sed -i "s|DB_DATABASE=.*|DB_DATABASE=smartdog_db_fnp8|g" .env
-sed -i "s|DB_USERNAME=.*|DB_USERNAME=smartdog_db_fnp8_user|g" .env
-sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=0SMTQjMgkWVSii6sUumnTXNfBp8qweKd|g" .env
+DB_CONNECTION=pgsql
+DB_HOST=dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com
+DB_PORT=5432
+DB_DATABASE=smartdog_db_fnp8
+DB_USERNAME=smartdog_db_fnp8_user
+DB_PASSWORD=0SMTQjMgkWVSii6sUumnTXNfBp8qweKd
+EOF
 
 echo "Aguardando PostgreSQL em dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com:5432..."
 
-for i in $(seq 1 60); do
+for i in $(seq 1 60 ); do
   nc -z dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com 5432 && break
   echo "Tentativa $i: ainda sem conexao... aguardando..."
   sleep 2
