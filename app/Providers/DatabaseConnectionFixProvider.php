@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\DatabaseManager;
+use Illuminate\Database\Connectors\ConnectionFactory;
 
 class DatabaseConnectionFixProvider extends ServiceProvider
 {
@@ -16,8 +17,10 @@ class DatabaseConnectionFixProvider extends ServiceProvider
                 $config['database'] = 'smartdog_db_fnp8';
                 $config['username'] = 'smartdog_db_fnp8_user';
                 $config['password'] = '0SMTQjMgkWVSii6sUumnTXNfBp8qweKd';
-                
-                return $db->factory->make($config, $name);
+
+                /** @var \Illuminate\Database\Connectors\ConnectionFactory $factory */
+                $factory = app(ConnectionFactory::class);
+                return $factory->make($config, $name);
             });
         });
     }
