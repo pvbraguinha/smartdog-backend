@@ -1,3 +1,8 @@
+databases:
+  - name: smartdog-db
+    plan: free
+    region: frankfurt
+
 services:
   - type: web
     name: smartdog-backend
@@ -11,7 +16,7 @@ services:
     dockerfilePath: Dockerfile
     envVars:
       - key: DATABASE_URL
-        value: postgresql://smartdog_db_fnp8_user:0SMTQjMgkWVSii6sUumnTXNfBp8qweKd@dpg-d10v3rm3jp1c739d1ae0-a.internal:5432/smartdog_db_fnp8
+        value: postgresql://smartdog_db_fnp8_user:0SMTQjMgkWVSii6sUumnTXNfBp8qweKd@smartdog-db:5432/smartdog_db_fnp8
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
