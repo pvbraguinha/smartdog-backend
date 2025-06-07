@@ -3,25 +3,18 @@
 # Usar endereço externo do banco de dados
 echo "Usando endereço externo do banco de dados"
 
-# Configurar variáveis de ambiente diretamente
-export DB_HOST="dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com"
-export DB_PORT="5432"
-export DB_CONNECTION="pgsql"
-export DB_DATABASE="smartdog_db_fnp8"
-export DB_USERNAME="smartdog_db_fnp8_user"
-export DB_PASSWORD="0SMTQjMgkWVSii6sUumnTXNfBp8qweKd"
+# Configurar variáveis de ambiente diretamente no arquivo .env
+echo "Atualizando arquivo .env com as configurações corretas..."
+sed -i "s|DB_HOST=.*|DB_HOST=dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com|g" .env
+sed -i "s|DB_PORT=.*|DB_PORT=5432|g" .env
+sed -i "s|DB_DATABASE=.*|DB_DATABASE=smartdog_db_fnp8|g" .env
+sed -i "s|DB_USERNAME=.*|DB_USERNAME=smartdog_db_fnp8_user|g" .env
+sed -i "s|DB_PASSWORD=.*|DB_PASSWORD=0SMTQjMgkWVSii6sUumnTXNfBp8qweKd|g" .env
 
-# Verificar e gerar APP_KEY se necessário
-if [ -z "$APP_KEY" ]; then
-  echo "Gerando APP_KEY..."
-  export APP_KEY=$(php artisan key:generate --show)
-  echo "APP_KEY gerada: $APP_KEY"
-fi
-
-echo "Aguardando PostgreSQL em $DB_HOST:$DB_PORT..."
+echo "Aguardando PostgreSQL em dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com:5432..."
 
 for i in $(seq 1 60); do
-  nc -z "$DB_HOST" "$DB_PORT" && break
+  nc -z dpg-d10v3rm3jp1c739d1ae0-a.frankfurt-postgres.render.com 5432 && break
   echo "Tentativa $i: ainda sem conexao... aguardando..."
   sleep 2
 done
