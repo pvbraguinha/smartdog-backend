@@ -44,12 +44,6 @@ Route::get('/clear-cache', function () {
     return 'Cache limpo!';
 });
 
-use Illuminate\Support\Facades\Route;
-
-Route::get('/', function () {
-    return response()->json(['message' => 'SmartDog API online. Utilize /api/ para acessar os endpoints.']);
-});
-
 // Rota para depurar APP_KEY e variáveis de ambiente
 Route::get('/check-env', function () {
     return response()->json([
