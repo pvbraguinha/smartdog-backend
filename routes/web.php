@@ -29,11 +29,6 @@ Route::get('/ping', function () {
     return response()->json(['message' => 'pong']);
 });
 
-Route::get('/', function () {
-    return response()->json(['message' => 'SmartDog Backend API. Use o prefixo /api.']);
-});
-
-
 // Rota para debug da APP_KEY
 Route::get('/debug-app-key', function () {
     return response()->json([
@@ -47,6 +42,12 @@ Route::get('/clear-cache', function () {
     Artisan::call('cache:clear');
     Artisan::call('config:cache');
     return 'Cache limpo!';
+});
+
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return response()->json(['message' => 'SmartDog API online. Utilize /api/ para acessar os endpoints.']);
 });
 
 // Rota para depurar APP_KEY e variáveis de ambiente
