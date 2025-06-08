@@ -24,6 +24,9 @@ Route::get('/app-key-test', function () {
     ]);
 });
 
+Route::get('/', function () {
+    return response()->json(['message' => 'SmartDog API raiz no ar!']);
+});
 // Rota simples para teste básico
 Route::get('/ping', function () {
     return response()->json(['message' => 'pong']);
