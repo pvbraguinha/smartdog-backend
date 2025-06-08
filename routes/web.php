@@ -29,6 +29,11 @@ Route::get('/ping', function () {
     return response()->json(['message' => 'pong']);
 });
 
+Route::get('/', function () {
+    return response()->json(['message' => 'SmartDog Backend API. Use o prefixo /api.']);
+});
+
+
 // Rota para debug da APP_KEY
 Route::get('/debug-app-key', function () {
     return response()->json([
