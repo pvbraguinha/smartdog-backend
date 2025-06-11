@@ -9,30 +9,24 @@ use Illuminate\Support\Facades\Log;
 class PetHumanController extends Controller
 {
     public function upload(Request $request)
-{
-    try {
-        Log::info('🧪 Iniciando upload sem validação...');
-        
-        // Salva só UM arquivo pra teste simples
-        $path = Storage::disk('s3')->put('teste', $request->file('focinho'));
-        
-        return response()->json([
-            'ok' => true,
-            'path' => $path
-        ]);
-    } catch (\Exception $e) {
-        Log::error('🔥 Erro de upload isolado: ' . $e->getMessage());
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
+    {
+        try {
+            Log::info('🧪 Iniciando upload sem validação...');
+            
+            // Salva apenas o arquivo "focinho" no bucket S3, dentro da pasta "teste"
+            $path = Storage::disk('s3')->put('teste', $request->file('focinho'));
 
-        return response()->json([
-            'message' => 'Imagens recebidas e salvas no S3 com sucesso!',
-            'paths' => $paths,              // caminhos no S3
-            'temporary_urls' => $urls,      // URLs pré-assinadas
-            'mock_human_image' => asset('mock/pethuman.jpg'), // imagem temporária de exemplo
-        ]);
+            Log::info("✔️ Upload de focinho realizado com sucesso em: " . $path);
+
+            return response()->json([
+                'ok' => true,
+                'path' => $path
+            ]);
+        } catch (\Exception $e) {
+            Log::error('🔥 Erro de upload isolado: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
