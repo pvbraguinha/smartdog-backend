@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 
-class PethumanController extends Controller
+class PetHumanController extends Controller
 {
     public function upload(Request $request)
     {
