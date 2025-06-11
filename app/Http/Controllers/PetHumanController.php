@@ -1,4 +1,5 @@
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 public function upload(Request $request)
 {
@@ -13,13 +14,22 @@ public function upload(Request $request)
     foreach (['focinho', 'frontal', 'angulo'] as $tipo) {
         $diretorio = "uploads/meupethumano/{$tipo}s";
 
-        // Cria o diretório se não existir
-        if (!Storage::disk('public')->exists($diretorio)) {
-            Storage::disk('public')->makeDirectory($diretorio);
-        }
+        try {
+            if (!Storage::disk('public')->exists($diretorio)) {
+                Storage::disk('public')->makeDirectory($diretorio, 0755, true);
+            }
 
-        // Salva o arquivo no diretório correto
-        $paths[$tipo] = Storage::disk('public')->putFile($diretorio, $request->file($tipo));
+            $paths[$tipo] = Storage::disk('public')->putFile($diretorio, $request->file($tipo));
+
+            Log::info("✔️ {$tipo} salvo em: " . $paths[$tipo]);
+
+        } catch (\Exception $e) {
+            Log::error("❌ Erro ao salvar {$tipo}: " . $e->getMessage());
+            return response()->json([
+                'error' => "Falha ao salvar imagem de {$tipo}.",
+                'exception' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     return response()->json([
