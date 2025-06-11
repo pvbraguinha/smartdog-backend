@@ -10,48 +10,54 @@ class PetHumanController extends Controller
 {
     public function upload(Request $request)
     {
-        try {
-            // Loga os nomes dos arquivos recebidos
-            Log::info('🧪 Campos de arquivo recebidos:', array_keys($request->allFiles()));
+        $campos = ['focinho', 'frontal', 'angulo'];
+        $paths = [];
+        $urls  = [];
+        $erros = [];
 
-            $request->validate([
-                'focinho' => 'required|image|max:5120',
-                'frontal' => 'required|image|max:5120',
-                'angulo'  => 'required|image|max:5120',
-            ]);
+        Log::info('🧪 Arquivos recebidos:', array_keys($request->allFiles()));
 
-            $paths = [];
-            $urls  = [];
-
-            foreach (['focinho', 'frontal', 'angulo'] as $tipo) {
-                $diretorio = "uploads/meupethumano/{$tipo}s";
-
-                $file = $request->file($tipo);
-                if (!$file || !$file->isValid()) {
-                    throw new \Exception("Arquivo {$tipo} inválido ou ausente.");
-                }
-
-                $path = Storage::disk('s3')->putFile($diretorio, $file);
-                $paths[$tipo] = $path;
-
-                $urls[$tipo] = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15));
-
-                Log::info("✔️ {$tipo} salvo no S3 em: {$path}");
+        foreach ($campos as $campo) {
+            if (!$request->hasFile($campo)) {
+                $erros[$campo] = 'Campo não enviado.';
+                continue;
             }
 
-            return response()->json([
-                'message' => 'Imagens recebidas e salvas no S3 com sucesso!',
-                'paths' => $paths,
-                'temporary_urls' => $urls,
-                'mock_human_image' => asset('mock/pethuman.jpg'),
-            ]);
-        } catch (\Exception $e) {
-            Log::error("❌ Erro no upload: " . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return response()->json([
-                'error' => $e->getMessage()
-            ], 500);
+            $file = $request->file($campo);
+
+            if (!$file->isValid()) {
+                $erros[$campo] = 'Arquivo inválido ou corrompido.';
+                continue;
+            }
+
+            if (!in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'])) {
+                $erros[$campo] = 'Formato inválido. Envie JPEG, PNG ou WEBP.';
+                continue;
+            }
+
+            if ($file->getSize() > 5 * 1024 * 1024) {
+                $erros[$campo] = 'Arquivo excede 5MB.';
+                continue;
+            }
+
+            try {
+                $diretorio = "uploads/meupethumano/{$campo}s";
+                $path = Storage::disk('s3')->putFile($diretorio, $file);
+                $paths[$campo] = $path;
+                $urls[$campo] = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15));
+                Log::info("✔️ {$campo} salvo no S3: {$path}");
+            } catch (\Exception $e) {
+                $erros[$campo] = 'Erro ao salvar no S3: ' . $e->getMessage();
+                Log::error("🔥 Falha ao salvar {$campo}: " . $e->getMessage());
+            }
         }
+
+        return response()->json([
+            'status' => empty($erros) ? 'sucesso' : 'parcial',
+            'paths' => $paths,
+            'temporary_urls' => $urls,
+            'errors' => $erros,
+            'mock_human_image' => asset('mock/pethuman.jpg'),
+        ], empty($erros) ? 200 : 207);
     }
 }
