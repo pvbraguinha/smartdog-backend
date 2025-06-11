@@ -11,6 +11,9 @@ class PetHumanController extends Controller
     public function upload(Request $request)
     {
         try {
+            // Loga os nomes dos arquivos recebidos
+            Log::info('🧪 Campos de arquivo recebidos:', array_keys($request->allFiles()));
+
             $request->validate([
                 'focinho' => 'required|image|max:5120',
                 'frontal' => 'required|image|max:5120',
