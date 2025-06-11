@@ -7,6 +7,7 @@ use App\Http\Controllers\SnoutRecognitionController;
 use App\Http\Controllers\DogLocationController;
 use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
+use App\Http\Controllers\PetHumanController;
 
 //  Teste simples de status da API
 Route::get('/test', function () {
@@ -27,6 +28,7 @@ Route::post('/dogs', [DogRegistrationController::class, 'store']);
 Route::post('/snout-recognition', [SnoutRecognitionController::class, 'detect']);
 Route::post('/dogs/{id}/location', [DogLocationController::class, 'update']);
 Route::get('/user/history', [UserHistoryController::class, 'index']);
+Route::post('/upload-pet-images', [PetHumanController::class, 'upload']);
 
 //  Teste de APP_KEY (opcional)
 Route::get('/app-key-test', function () {
@@ -56,10 +58,6 @@ Route::get('/test-db-connection', function (Request $request) {
         ], 500);
     }
 });
-
-use App\Http\Controllers\PetHumanController;
-
-Route::post('/upload-pet-images', [PetHumanController::class, 'upload']);
 
 Route::get('/check-env', function () {
     return response()->json([
