@@ -21,11 +21,15 @@ AWS_BUCKET=$AWS_BUCKET
 AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
 FILESYSTEM_DISK=s3
 AWS_USE_PATH_STYLE_ENDPOINT=false
-
 EOF
 
 # Exporta APP_KEY para estar disponível no ambiente do shell
 export APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
+
+# Aumenta limites de upload do PHP para evitar erros ao enviar múltiplas imagens
+echo "upload_max_filesize = 15M" >> /usr/local/etc/php/conf.d/uploads.ini
+echo "post_max_size = 20M" >> /usr/local/etc/php/conf.d/uploads.ini
+echo "max_file_uploads = 10" >> /usr/local/etc/php/conf.d/uploads.ini
 
 # Mostra APP_KEY no terminal (para depuração)
 echo "APP_KEY lida pelo shell: $APP_KEY"
