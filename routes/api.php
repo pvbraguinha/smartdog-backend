@@ -115,6 +115,18 @@ Route::get('/test-s3', function () {
     }
 });
 
+use Illuminate\Support\Facades\Route;
+
+Route::get('/debug-s3-vars', function () {
+    return response()->json([
+        'region'      => env('AWS_DEFAULT_REGION'),
+        'bucket'      => env('AWS_BUCKET'),
+        'access_key'  => env('AWS_ACCESS_KEY_ID'),
+        'secret_set'  => !empty(env('AWS_SECRET_ACCESS_KEY')),
+    ]);
+});
+
+
 
 
 
