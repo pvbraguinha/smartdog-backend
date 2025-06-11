@@ -16,6 +16,14 @@ DB_USERNAME=smartdog_db_fnp8_user
 DB_PASSWORD=0SMTQjMgkWVSii6sUumnTXNfBp8qweKd
 EOF
 
+AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+AWS_BUCKET=pethumano-app-s3
+AWS_DEFAULT_REGION=eu-north-1
+FILESYSTEM_DISK=s3
+AWS_USE_PATH_STYLE_ENDPOINT=false
+EOF
+
 # Exporta APP_KEY para estar disponível no ambiente do shell
 export APP_KEY=base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
 
