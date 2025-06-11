@@ -31,7 +31,15 @@ class PetHumanController extends Controller
 
                 Log::info("✔️ {$tipo} salvo no S3 em: " . $path);
             } catch (\Exception $e) {
-                Log::error("❌ Erro ao salvar {$tipo} no S3: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+    Log::error("❌ Erro ao salvar {$tipo} no S3: " . $e->getMessage(), [
+        'trace' => $e->getTraceAsString()
+    ]);
+
+    return response()->json([
+        'error' => "Erro ao salvar imagem de {$tipo}",
+        'message' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ], 500);
 
             }
         }
