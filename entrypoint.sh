@@ -21,6 +21,7 @@ AWS_BUCKET=$AWS_BUCKET
 AWS_DEFAULT_REGION=$AWS_DEFAULT_REGION
 FILESYSTEM_DISK=s3
 AWS_USE_PATH_STYLE_ENDPOINT=false
+
 EOF
 
 # Exporta APP_KEY para estar disponível no ambiente do shell
