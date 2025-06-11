@@ -98,6 +98,22 @@ Route::get('/debug-storage', function () {
     ];
 });
 
+// Em routes/web.php ou routes/api.php
+Route::get('/test-s3', function () {
+    try {
+        // Tenta listar arquivos no bucket
+        $files = Storage::disk('s3')->files();
+        return response()->json([
+            'status' => 'S3 conectado com sucesso!',
+            'files' => $files
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'Erro na conexão com S3',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
 
 
 
