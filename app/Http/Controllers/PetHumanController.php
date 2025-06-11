@@ -1,5 +1,3 @@
-<?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -10,54 +8,53 @@ class PetHumanController extends Controller
 {
     public function upload(Request $request)
     {
-        $campos = ['focinho', 'frontal', 'angulo'];
-        $paths = [];
-        $urls  = [];
-        $erros = [];
+        try {
+            $arquivos = $request->allFiles();
 
-        Log::info('🧪 Arquivos recebidos:', array_keys($request->allFiles()));
+            // Loga os nomes dos campos recebidos
+            Log::info('🧪 Arquivos recebidos:', array_keys($arquivos));
 
-        foreach ($campos as $campo) {
-            if (!$request->hasFile($campo)) {
-                $erros[$campo] = 'Campo não enviado.';
-                continue;
-            }
+            $tipos = ['focinho', 'frontal', 'angulo'];
+            $paths = [];
+            $urls  = [];
+            $errors = [];
 
-            $file = $request->file($campo);
+            foreach ($tipos as $i => $tipo) {
+                if (!isset($arquivos[$tipo])) {
+                    $errors[$tipo] = 'Campo não enviado.';
+                    continue;
+                }
 
-            if (!$file->isValid()) {
-                $erros[$campo] = 'Arquivo inválido ou corrompido.';
-                continue;
-            }
+                $file = $arquivos[$tipo];
 
-            if (!in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'])) {
-                $erros[$campo] = 'Formato inválido. Envie JPEG, PNG ou WEBP.';
-                continue;
-            }
+                if (!$file->isValid()) {
+                    $errors[$tipo] = 'Arquivo inválido.';
+                    continue;
+                }
 
-            if ($file->getSize() > 5 * 1024 * 1024) {
-                $erros[$campo] = 'Arquivo excede 5MB.';
-                continue;
-            }
-
-            try {
-                $diretorio = "uploads/meupethumano/{$campo}s";
+                $diretorio = "uploads/meupethumano/{$tipo}s";
                 $path = Storage::disk('s3')->putFile($diretorio, $file);
-                $paths[$campo] = $path;
-                $urls[$campo] = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15));
-                Log::info("✔️ {$campo} salvo no S3: {$path}");
-            } catch (\Exception $e) {
-                $erros[$campo] = 'Erro ao salvar no S3: ' . $e->getMessage();
-                Log::error("🔥 Falha ao salvar {$campo}: " . $e->getMessage());
-            }
-        }
+                $paths[$tipo] = $path;
+                $urls[$tipo] = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15));
 
-        return response()->json([
-            'status' => empty($erros) ? 'sucesso' : 'parcial',
-            'paths' => $paths,
-            'temporary_urls' => $urls,
-            'errors' => $erros,
-            'mock_human_image' => asset('mock/pethuman.jpg'),
-        ], empty($erros) ? 200 : 207);
+                Log::info("✔️ {$tipo} salvo no S3 em: {$path}");
+            }
+
+            return response()->json([
+                'status' => count($errors) > 0 ? 'parcial' : 'completo',
+                'paths' => $paths,
+                'temporary_urls' => $urls,
+                'errors' => $errors,
+                'mock_human_image' => asset('mock/pethuman.jpg'),
+            ]);
+        } catch (\Exception $e) {
+            Log::error("❌ Erro geral no upload: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
