@@ -124,6 +124,14 @@ Route::get('/debug-s3-vars', function () {
     ]);
 });
 
+Route::get('/debug-app-key', function () {
+    return response()->json([
+        'APP_KEY' => config('app.key'),
+        'env_APP_KEY' => env('APP_KEY'),
+        'APP_ENV' => config('app.env'),
+    ]);
+});
+
 
 
 
