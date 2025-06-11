@@ -66,6 +66,26 @@ Route::get('/check-env', function () {
         'DB_PASSWORD' => bin2hex(env('DB_PASSWORD')),
         'DB_USERNAME' => bin2hex(env('DB_USERNAME')),
     ]);
+
+});
+
+use Illuminate\Support\Facades\Storage;
+
+Route::get('/public-gallery', function () {
+    $baseUrl = config('app.url') . '/storage';
+
+    $tipos = ['focinhos', 'frontais', 'angulos'];
+
+    $galeria = [];
+
+    foreach ($tipos as $tipo) {
+        $arquivos = Storage::disk('public')->files("uploads/meupethumano/{$tipo}");
+        $galeria[$tipo] = array_map(function ($path) use ($baseUrl) {
+            return $baseUrl . '/' . $path;
+        }, $arquivos);
+    }
+
+    return response()->json($galeria);
 });
 
 
