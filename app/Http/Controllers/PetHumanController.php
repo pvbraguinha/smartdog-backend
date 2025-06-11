@@ -1,3 +1,5 @@
+<?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -16,17 +18,16 @@ class PetHumanController extends Controller
 
             $tipos = ['focinho', 'frontal', 'angulo'];
             $paths = [];
-            $urls  = [];
+            $urls = [];
             $errors = [];
 
-            foreach ($tipos as $i => $tipo) {
+            foreach ($tipos as $tipo) {
                 if (!isset($arquivos[$tipo])) {
                     $errors[$tipo] = 'Campo não enviado.';
                     continue;
                 }
 
                 $file = $arquivos[$tipo];
-
                 if (!$file->isValid()) {
                     $errors[$tipo] = 'Arquivo inválido.';
                     continue;
@@ -35,6 +36,7 @@ class PetHumanController extends Controller
                 $diretorio = "uploads/meupethumano/{$tipo}s";
                 $path = Storage::disk('s3')->putFile($diretorio, $file);
                 $paths[$tipo] = $path;
+
                 $urls[$tipo] = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15));
 
                 Log::info("✔️ {$tipo} salvo no S3 em: {$path}");
@@ -51,7 +53,6 @@ class PetHumanController extends Controller
             Log::error("❌ Erro geral no upload: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
-
             return response()->json([
                 'error' => $e->getMessage()
             ], 500);
