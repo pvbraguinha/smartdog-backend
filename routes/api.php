@@ -88,6 +88,16 @@ Route::get('/public-gallery', function () {
     return response()->json($galeria);
 });
 
+use Illuminate\Support\Facades\File;
+
+Route::get('/debug-storage', function () {
+    return [
+        'exists_focinho' => File::exists(storage_path('app/public/uploads/meupethumano/focinhos')),
+        'exists_frontais' => File::exists(storage_path('app/public/uploads/meupethumano/frontais')),
+        'exists_angulos' => File::exists(storage_path('app/public/uploads/meupethumano/angulos')),
+    ];
+});
+
 
 
 
