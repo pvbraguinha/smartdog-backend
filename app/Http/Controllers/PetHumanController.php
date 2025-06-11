@@ -1,40 +1,40 @@
-<?php
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-
-class PetHumanController extends Controller
+public function upload(Request $request)
 {
-    public function upload(Request $request)
-    {
-        $request->validate([
-            'focinho' => 'required|image|max:5120',
-            'frontal' => 'required|image|max:5120',
-            'angulo'  => 'required|image|max:5120',
-        ]);
+    $request->validate([
+        'focinho' => 'required|image|max:5120',
+        'frontal' => 'required|image|max:5120',
+        'angulo'  => 'required|image|max:5120',
+    ]);
 
-        $basePath = public_path('storage/uploads/meupethumano');
-        $paths = [];
+    $paths = [];
 
-        foreach (['focinho', 'frontal', 'angulo'] as $tipo) {
-            $folder = "{$basePath}/{$tipo}s";
+    foreach (['focinho', 'frontal', 'angulo'] as $tipo) {
+        $diretorio = "uploads/meupethumano/{$tipo}s";
 
-            if (!file_exists($folder)) {
-                mkdir($folder, 0775, true);
+        try {
+            if (!Storage::disk('public')->exists($diretorio)) {
+                Storage::disk('public')->makeDirectory($diretorio, 0755, true);
             }
 
-            $file = $request->file($tipo);
-            $filename = uniqid() . '_' . $file->getClientOriginalName();
-            $file->move($folder, $filename);
+            $paths[$tipo] = Storage::disk('public')->putFile($diretorio, $request->file($tipo));
 
-            $paths[$tipo] = asset("storage/uploads/meupethumano/{$tipo}s/{$filename}");
+            Log::info("✔️ {$tipo} salvo em: " . $paths[$tipo]);
+
+        } catch (\Exception $e) {
+            Log::error("❌ Erro ao salvar {$tipo}: " . $e->getMessage());
+            return response()->json([
+                'error' => "Falha ao salvar imagem de {$tipo}.",
+                'exception' => $e->getMessage(),
+            ], 500);
         }
-
-        return response()->json([
-            'message' => 'Imagens recebidas com sucesso!',
-            'paths' => $paths,
-            'mock_human_image' => asset('mock/pethuman.jpg'),
-        ]);
     }
+
+    return response()->json([
+        'message' => 'Imagens recebidas com sucesso!',
+        'paths' => $paths,
+        'mock_human_image' => asset('mock/pethuman.jpg'),
+    ]);
 }
