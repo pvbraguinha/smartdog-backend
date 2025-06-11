@@ -42,5 +42,8 @@ php artisan route:clear
 
 php artisan migrate --force
 
+# Cria o link simbólico para permitir acesso público às imagens
+php artisan storage:link || true
+
 echo "Iniciando servidor embutido Laravel com artisan serve..."
 php -d variables_order=EGPCS -d display_errors=1 artisan serve --host=0.0.0.0 --port=10000
