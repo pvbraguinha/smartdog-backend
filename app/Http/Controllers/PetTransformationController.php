@@ -28,9 +28,9 @@ class PetTransformationController extends Controller
         $petImages = [];
 
         $allowedTypes = [
-            'frontal' => 'frontais',
-            'focinho' => 'focinhos',
-            'angulo'  => 'angulos',
+            'frontal' => 'frontal',   // corrigido aqui
+            'focinho' => 'focinho',
+            'angulo'  => 'angulo',
         ];
 
         foreach ($allowedTypes as $field => $folder) {
