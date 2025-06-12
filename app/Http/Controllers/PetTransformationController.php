@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\PetTransformationService;
+use Illuminate\Support\Facades\Storage;
 
 class PetTransformationController extends Controller
 {
@@ -26,10 +27,12 @@ class PetTransformationController extends Controller
 
         // Armazenar as imagens no S3 e gerar URLs públicas
         $petImages = [];
+
         foreach (['frontal', 'focinho', 'angulo'] as $type) {
             if ($request->hasFile($type)) {
-                $path = $request->file($type)->store("pets", 's3');
-                $petImages[$type] = \Storage::disk('s3')->url($path);
+                $path = $request->file($type)->store("uploads/meupethumano/{$type}", 's3');
+                Storage::disk('s3')->setVisibility($path, 'public');
+                $petImages[$type] = Storage::disk('s3')->url($path);
             }
         }
 
@@ -43,3 +46,4 @@ class PetTransformationController extends Controller
         return response()->json($result);
     }
 }
+
