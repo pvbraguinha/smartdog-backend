@@ -86,6 +86,10 @@ Route::get('/public-gallery', function () {
     return response()->json($galeria);
 });
 
+use App\Http\Controllers\PetTransformationController;
+
+Route::post('/transform-pet', [PetTransformationController::class, 'transform']);
+
 use Illuminate\Support\Facades\File;
 
 Route::get('/debug-storage', function () {
@@ -129,6 +133,8 @@ Route::get('/debug-app-key', function () {
         'APP_ENV' => config('app.env'),
     ]);
 });
+
+
 
 
 
