@@ -6,9 +6,10 @@ use App\Http\Controllers\SnoutRecognitionController;
 use App\Http\Controllers\DogLocationController;
 use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
+use App\Services\ReplicateService;
 
 Route::get('/', function () {
-    return response()->json(['message' => 'SmartDog API is working!']);
+    return response()->json(['message' => 'SmartDog API raiz no ar!']);
 });
 
 // Rotas principais do sistema
@@ -24,9 +25,6 @@ Route::get('/app-key-test', function () {
     ]);
 });
 
-Route::get('/', function () {
-    return response()->json(['message' => 'SmartDog API raiz no ar!']);
-});
 // Rota simples para teste básico
 Route::get('/ping', function () {
     return response()->json(['message' => 'pong']);
@@ -63,4 +61,16 @@ Route::get('/check-env', function () {
 // Rota para mostrar a chave diretamente da config
 Route::get('/check-key', function () {
     return config('app.key');
+});
+
+// NOVA ROTA: Teste direto da Replicate no Render
+Route::get('/teste-replicate', function () {
+    $replicate = app(ReplicateService::class);
+
+    $imageUrl = 'https://replicate.delivery/pbxt/W9IPVrLhDkEV1oN6ekxgu4V6B3lLmvV8XYf9fZ1u6KNa0sSu/out-0.png'; // imagem pública
+    $prompt = 'A 25-year-old male human inspired by a golden retriever: soft face, kind eyes, golden wavy hair, in studio lighting, DSLR quality';
+
+    $result = $replicate->transformPetToHuman($imageUrl, $prompt);
+
+    return response()->json($result);
 });
