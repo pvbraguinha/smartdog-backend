@@ -4,20 +4,26 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ReplicateService
 {
     protected string $apiUrl = 'https://api.replicate.com/v1/predictions';
-    protected string $modelVersion = '3bb13fe1c33c35987b33792b01b71ed6529d03f165d1c2416375859f09ca9fef';
+    protected string $modelVersion;
+
+    public function __construct()
+    {
+        $this->modelVersion = config('services.replicate.version');
+    }
 
     public function generateImage(string $imageUrl, string $prompt): ?string
     {
-        $seed = rand(1000, 999999); // Sempre gera um seed aleatório
+        $seed = rand(1000, 999999);
 
         Log::info("Enviando imagem para Replicate com seed: {$seed}");
 
         $response = Http::withHeaders([
-            'Authorization' => 'Token ' . env('REPLICATE_API_TOKEN'),
+            'Authorization' => 'Token ' . config('services.replicate.token'),
             'Content-Type' => 'application/json'
         ])->post($this->apiUrl, [
             'version' => $this->modelVersion,
@@ -28,9 +34,9 @@ class ReplicateService
                 'condition_scale' => 0.5,
                 'strength' => 0.8,
                 'seed' => $seed,
-                'lora_weights' => 'https://pbxt.replicate.delivery/mwN3AFyYZyouOB03Uhw8ubKW9rpqMgdtL9zYV9GF2WGDiwbE/traine...', // 🔁 Insira o link completo aqui
                 'refine_steps' => 20,
-                'num_inference_steps' => 40
+                'num_inference_steps' => 40,
+                'lora_weights' => 'https://pbxt.replicate.delivery/mwN3AFyYZyouOB03Uhw8ubKW9rpqMgdtL9zYV9GF2WGDiwbE/trained_model.tar'
             ]
         ]);
 
@@ -44,12 +50,11 @@ class ReplicateService
         $predictionId = $response->json('id');
         $statusUrl = $this->apiUrl . '/' . $predictionId;
 
-        // Polling até a imagem estar pronta (timeout ~120s)
         for ($i = 0; $i < 60; $i++) {
             sleep(2);
 
             $poll = Http::withHeaders([
-                'Authorization' => 'Token ' . env('REPLICATE_API_TOKEN'),
+                'Authorization' => 'Token ' . config('services.replicate.token'),
             ])->get($statusUrl);
 
             if ($poll->failed()) {
@@ -57,19 +62,28 @@ class ReplicateService
                 return null;
             }
 
-            $status = $poll->json('status');
+            if ($poll->json('status') === 'succeeded') {
+                $outputUrl = $poll->json('output')[0] ?? null;
 
-            if ($status === 'succeeded') {
-                return $poll->json('output')[0] ?? null;
+                if (!$outputUrl) {
+                    Log::error("Nenhuma URL de saída retornada.");
+                    return null;
+                }
+
+                $contents = file_get_contents($outputUrl);
+                $filename = "uploads/meupethumano/resultados/" . uniqid() . ".jpg";
+                Storage::disk('s3')->put($filename, $contents, 'public');
+
+                return Storage::disk('s3')->url($filename);
             }
 
-            if ($status === 'failed') {
+            if ($poll->json('status') === 'failed') {
                 Log::error("Predição falhou: " . $poll->body());
                 return null;
             }
         }
 
-        Log::warning("Timeout: polling excedeu limite.");
+        Log::warning("Timeout: polling excedeu o limite.");
         return null;
     }
 
@@ -92,7 +106,7 @@ class ReplicateService
             return [
                 'success' => true,
                 'output_url' => $resultUrl,
-                'prediction_id' => null, // Futuro uso
+                'prediction_id' => null,
                 'processing_time' => $processingTime,
             ];
         } catch (\Exception $e) {
@@ -105,3 +119,4 @@ class ReplicateService
         }
     }
 }
+
