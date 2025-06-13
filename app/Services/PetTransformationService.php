@@ -47,11 +47,11 @@ class PetTransformationService
 
             $this->updateTransformationHistory($userSession, $detectedBreed, $replicateResult);
 
+            // Cria a imagem composta (usando sempre a assinatura correta)
             $compositeImageUrl = $this->createSideBySideComposition(
                 $controlImageUrl,
                 $replicateResult["output_url"],
-                $userSession,
-                $detectedBreed
+                $userSession
             );
 
             return [
@@ -100,26 +100,16 @@ class PetTransformationService
         }
     }
 
-    private function createSideBySideComposition($originalUrl, $transformedUrl, $userSession, $breedName)
+    private function createSideBySideComposition($originalUrl, $transformedUrl, $userSession)
     {
+        // Só usa uma assinatura, sempre
         $result = $this->imageCompositionService->createProfessionalComposition(
             $originalUrl,
             $transformedUrl,
-            $breedName,
             $userSession
         );
 
-        if ($result["success"]) {
-            return $result["composition_url"];
-        }
-
-        $simpleResult = $this->imageCompositionService->createSideBySideComposition(
-            $originalUrl,
-            $transformedUrl,
-            $userSession
-        );
-
-        return $simpleResult["success"] ? $simpleResult["composition_url"] : $transformedUrl;
+        // Se falhar, retorna a transformada pura (fallback)
+        return $result["success"] ? $result["composition_url"] : $transformedUrl;
     }
 }
-
