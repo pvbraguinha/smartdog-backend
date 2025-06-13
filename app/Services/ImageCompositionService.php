@@ -13,6 +13,19 @@ class ImageCompositionService
     protected $outputHeight = 512;
     protected $imageSize = 512;
 
+    /**
+     * Cria composição lado a lado do pet original e versão humana.
+     * Esse método é um alias e chama o método profissional.
+     */
+    public function createSideBySideComposition($originalImageUrl, $transformedImageUrl, $userSession)
+    {
+        // Para compatibilidade, apenas chama o principal
+        return $this->createProfessionalComposition($originalImageUrl, $transformedImageUrl, $userSession);
+    }
+
+    /**
+     * Cria composição lado a lado (profissional) do pet original e versão humana.
+     */
     public function createProfessionalComposition($originalImageUrl, $transformedImageUrl, $userSession)
     {
         try {
@@ -103,3 +116,4 @@ class ImageCompositionService
         return Storage::disk("s3")->url($filename);
     }
 }
+
