@@ -134,11 +134,11 @@ Route::get('/debug-app-key', function () {
     ]);
 });
 
-Route::get('/debug-replicate', function () {
+Route::get('/api/debug-replicate', function () {
     return response()->json([
-        'token_ok' => env('REPLICATE_API_TOKEN') ? true : false,
-        'model_ok' => env('REPLICATE_MODEL_VERSION') ? true : false,
-        'token_prefix' => substr(env('REPLICATE_API_TOKEN'), 0, 5)
+        'token_ok' => config('services.replicate.token') ? true : false,
+        'model_ok' => config('services.replicate.version') ? true : false,
+        'token_prefix' => substr(config('services.replicate.token'), 0, 5),
     ]);
 });
 
