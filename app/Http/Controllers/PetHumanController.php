@@ -35,6 +35,25 @@ class PetHumanController extends Controller
             $urls = [];
             $errors = [];
 
+            // Checagem: impedir upload de fotos repetidas
+            $hashes = [];
+            foreach ($pastas as $tipo => $pasta) {
+                if (isset($arquivos[$tipo]) && $arquivos[$tipo]->isValid()) {
+                    $hashes[$tipo] = md5_file($arquivos[$tipo]->getRealPath());
+                }
+            }
+            // Testa se algum par de fotos é igual
+            if (
+                (isset($hashes['frontal'], $hashes['focinho']) && $hashes['frontal'] === $hashes['focinho']) ||
+                (isset($hashes['frontal'], $hashes['angulo']) && $hashes['frontal'] === $hashes['angulo']) ||
+                (isset($hashes['focinho'], $hashes['angulo']) && $hashes['focinho'] === $hashes['angulo'])
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'As fotos de frontal, focinho e ângulo devem ser diferentes.'
+                ], 400);
+            }
+
             // Salva todas as imagens enviadas no S3
             foreach ($pastas as $tipo => $pasta) {
                 if (!isset($arquivos[$tipo])) {
