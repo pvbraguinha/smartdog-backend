@@ -29,10 +29,6 @@ class ImageCompositionService
             $originalResized = $this->resizeImageMaintainAspect($original, $this->imageSize);
             $transformedResized = $this->resizeImageMaintainAspect($transformed, $this->imageSize);
 
-            $canvas->rectangle(0, 0, $this->outputWidth, $this->outputHeight, function ($draw) {
-                $draw->background('#f8f9fa');
-            });
-
             $leftX = ($this->imageSize - $originalResized->width()) / 2;
             $leftY = ($this->outputHeight - $originalResized->height()) / 2;
             $rightX = $this->imageSize + ($this->imageSize - $transformedResized->width()) / 2;
@@ -43,10 +39,8 @@ class ImageCompositionService
 
             // Divider line
             $canvas->line(
-                $this->imageSize,
-                0,
-                $this->imageSize,
-                $this->outputHeight,
+                $this->imageSize, 0,
+                $this->imageSize, $this->outputHeight,
                 function ($draw) {
                     $draw->color('#adb5bd');
                     $draw->width(2);
@@ -66,8 +60,8 @@ class ImageCompositionService
                 $font->align('left');
             });
 
-            // Marca d'água opcional
-            $canvas->text("Meu Pet Humano", $this->outputWidth - 20, $this->outputHeight - 10, function ($font) {
+            // Marca d'água
+            $canvas->text("Meu Pet Humano", $this->outputWidth - 10, $this->outputHeight - 10, function ($font) {
                 $font->size(12);
                 $font->color('#ced4da');
                 $font->align('right');
