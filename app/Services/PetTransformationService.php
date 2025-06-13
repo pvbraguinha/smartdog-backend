@@ -22,22 +22,21 @@ class PetTransformationService
         $this->imageCompositionService = $imageCompositionService;
     }
 
-    // Agora aceita breed, sex, age
-    public function transformPet($petImages, $userSession, $manualBreed, $sex = null, $age = null)
+    // Agora aceita especie, breed, sex, age
+    public function transformPet($petImages, $userSession, $especie, $manualBreed, $sex = null, $age = null)
     {
         try {
-            $detectedBreed = $manualBreed;
-
-            if (empty($detectedBreed)) {
-                throw new \Exception("A raça do pet deve ser fornecida pelo usuário.");
+            if (empty($especie) || empty($manualBreed)) {
+                throw new \Exception("Espécie e raça do pet devem ser fornecidas pelo usuário.");
             }
             if (empty($sex) || empty($age)) {
                 throw new \Exception("Sexo e idade do pet são obrigatórios.");
             }
 
-            Log::info("Raça fornecida pelo usuário: {$detectedBreed}");
+            Log::info("Espécie fornecida pelo usuário: {$especie}, Raça: {$manualBreed}");
 
-            $prompt = $this->promptGenerator->generate($detectedBreed);
+            // Prompt dinâmico!
+            $prompt = $this->promptGenerator->generate($especie, $manualBreed, $sex, $age);
 
             Log::info("Prompt gerado", ["prompt" => $prompt]);
 
@@ -56,7 +55,7 @@ class PetTransformationService
             }
 
             // Salva tudo junto no histórico!
-            $this->updateTransformationHistory($userSession, $detectedBreed, $replicateResult, $sex, $age);
+            $this->updateTransformationHistory($userSession, $manualBreed, $replicateResult, $sex, $age);
 
             $compositeImageUrl = $this->createSideBySideComposition(
                 $controlImageUrl,
@@ -66,13 +65,14 @@ class PetTransformationService
 
             return [
                 "success" => true,
-                "breed_detected" => $detectedBreed,
+                "especie" => $especie,
+                "breed_detected" => $manualBreed,
                 "original_image" => $controlImageUrl,
                 "transformed_image" => $replicateResult["output_url"],
                 "composite_image" => $compositeImageUrl,
                 "prompt_used" => $prompt,
                 "processing_time" => $replicateResult["processing_time"],
-                "breed" => $detectedBreed,
+                "breed" => $manualBreed,
                 "sex" => $sex,
                 "age" => $age,
             ];
@@ -91,7 +91,6 @@ class PetTransformationService
         return $petImages["frontal"] ?? null;
     }
 
-    // Agora aceita $sex e $age
     private function updateTransformationHistory($userSession, $breed, $replicateResult, $sex = null, $age = null)
     {
         $history = TransformationHistory::where("user_session", $userSession)
@@ -128,4 +127,3 @@ class PetTransformationService
         return $result["success"] ? $result["composition_url"] : $transformedUrl;
     }
 }
-

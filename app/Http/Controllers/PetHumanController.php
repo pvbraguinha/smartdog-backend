@@ -21,15 +21,16 @@ class PetHumanController extends Controller
         try {
             $arquivos = $request->allFiles();
             $session = $request->input('session');
+            $especie = $request->input('especie'); // <-- NOVO
             $breed = $request->input('breed');
             $sex = $request->input('sex');
             $age = $request->input('age');
 
             // Validação dos campos obrigatórios
-            if (empty($breed) || empty($sex) || empty($age)) {
+            if (empty($especie) || empty($breed) || empty($sex) || empty($age)) {
                 return response()->json([
                     'success' => false,
-                    'error' => 'Preencha raça, sexo e idade do pet.'
+                    'error' => 'Preencha espécie, raça, sexo e idade do pet.'
                 ], 400);
             }
 
@@ -96,11 +97,12 @@ class PetHumanController extends Controller
                 'frontal' => $urls['frontal'],
             ];
 
-            // Agora passa breed, sex, age para o service!
-            $result = $this->transformationService->transformPet($urlsControle, $session, $breed, $sex, $age);
+            // Agora passa especie, breed, sex, age para o service!
+            $result = $this->transformationService->transformPet($urlsControle, $session, $especie, $breed, $sex, $age);
 
             // Junta as URLs de todas as imagens salvas ao resultado
             $result['uploaded_images'] = $urls;
+            $result['especie'] = $especie;
             $result['breed'] = $breed;
             $result['sex'] = $sex;
             $result['age'] = $age;
