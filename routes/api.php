@@ -142,13 +142,13 @@ Route::get('/api/debug-replicate', function () {
     ]);
 });
 
+use Illuminate\Support\Facades\DB;
 
-
-
-
-
-
-
-
-
+Route::get('/pet-human-count', function () {
+    // Conta apenas os pets realmente transformados (com imagem resultante)
+    $total = DB::table('transformation_histories')
+        ->whereNotNull('result_image_url')
+        ->count();
+    return response()->json(['count' => $total]);
+});
 
