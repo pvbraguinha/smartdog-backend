@@ -35,6 +35,7 @@ class PetHumanController extends Controller
             $urls = [];
             $errors = [];
 
+            // Salva todas as imagens enviadas no S3
             foreach ($pastas as $tipo => $pasta) {
                 if (!isset($arquivos[$tipo])) {
                     continue;
@@ -53,14 +54,24 @@ class PetHumanController extends Controller
                 Log::info("✔️ {$tipo} salvo em: {$path}");
             }
 
-            if (!isset($urls['frontal'])) {
+            // "frontal" é obrigatória para processar no Replicate
+            if (empty($urls['frontal'])) {
                 return response()->json([
                     'success' => false,
                     'error' => 'Imagem frontal é obrigatória.'
                 ], 400);
             }
 
-            $result = $this->transformationService->transformPet($urls, $session, $breed);
+            // Só envia a frontal como imagem de controle pro service
+            $urlsControle = [
+                'frontal' => $urls['frontal'],
+                // Focinho e angulo são armazenados no S3 e podem ser usados no futuro, mas não enviados pro Replicate agora
+            ];
+
+            $result = $this->transformationService->transformPet($urlsControle, $session, $breed);
+
+            // Junta as URLs de todas as imagens salvas ao resultado
+            $result['uploaded_images'] = $urls;
 
             return response()->json($result);
         } catch (\Exception $e) {
