@@ -3,13 +3,9 @@
 return [
 
     'name' => env('APP_NAME', 'Laravel'),
-
     'env' => env('APP_ENV', 'production'),
-
     'debug' => (bool) env('APP_DEBUG', false),
-
     'url' => env('APP_URL', 'http://localhost'),
-
     'timezone' => 'UTC',
 
     'locale' => env('APP_LOCALE', 'en'),
@@ -17,9 +13,7 @@ return [
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     'cipher' => 'AES-256-CBC',
-
     'key' => env('APP_KEY', 'base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ='),
-
     'previous_keys' => explode(',', env('APP_PREVIOUS_KEYS', '')),
 
     'maintenance' => [
@@ -27,17 +21,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Autoloaded Service Providers
-    |--------------------------------------------------------------------------
-    */
-
     'providers' => [
 
-        /*
-         * Laravel Framework Service Providers...
-         */
         Illuminate\Auth\AuthServiceProvider::class,
         Illuminate\Broadcasting\BroadcastServiceProvider::class,
         Illuminate\Bus\BusServiceProvider::class,
@@ -61,22 +46,15 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
 
-        /*
-         * Application Service Providers...
-         */
+        // ❌ REMOVIDO: Intervention\Image\ImageServiceProvider::class
+
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
         App\Providers\DatabaseConnectionFixProvider::class,
-        App\Providers\PetTransformationServiceProvider::class, // Adicionado
+        App\Providers\PetTransformationServiceProvider::class,
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Class Aliases
-    |--------------------------------------------------------------------------
-    */
 
     'aliases' => [
         'App' => Illuminate\Support\Facades\App::class,
@@ -113,7 +91,8 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
-        'Image' => Intervention\Image\Facades\Image::class, // Adicionado
+
+        // ❌ REMOVIDO: 'Image' => Intervention\Image\Facades\Image::class,
     ],
 
 ];

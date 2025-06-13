@@ -5,18 +5,13 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Intervention\Image\ImageManagerStatic as Image;
+use Image; // Usando facade da versão 2
 
 class ImageCompositionService
 {
     protected $outputWidth = 1024;
     protected $outputHeight = 512;
     protected $imageSize = 512;
-
-    public function __construct()
-    {
-        Image::configure(['driver' => 'gd']);
-    }
 
     public function createProfessionalComposition($originalImageUrl, $transformedImageUrl, $userSession)
     {
@@ -34,8 +29,8 @@ class ImageCompositionService
             $rightX = $this->imageSize + ($this->imageSize - $transformedResized->width()) / 2;
             $rightY = ($this->outputHeight - $transformedResized->height()) / 2;
 
-            $canvas->insert($originalResized, 'top-left', $leftX, $leftY);
-            $canvas->insert($transformedResized, 'top-left', $rightX, $rightY);
+            $canvas->insert($originalResized, 'top-left', (int)$leftX, (int)$leftY);
+            $canvas->insert($transformedResized, 'top-left', (int)$rightX, (int)$rightY);
 
             // Divider line
             $canvas->line(
@@ -61,7 +56,7 @@ class ImageCompositionService
             });
 
             // Marca d'água
-            $canvas->text("Meu Pet Humano", $this->outputWidth - 10, $this->outputHeight - 10, function ($font) {
+            $canvas->text("smartdog", $this->outputWidth - 10, $this->outputHeight - 10, function ($font) {
                 $font->size(12);
                 $font->color('#ced4da');
                 $font->align('right');
