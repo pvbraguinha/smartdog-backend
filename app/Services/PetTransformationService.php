@@ -1,5 +1,4 @@
 <?php
-// app/Services/PetTransformationService.php
 
 namespace App\Services;
 
@@ -23,9 +22,6 @@ class PetTransformationService
         $this->imageCompositionService = $imageCompositionService;
     }
 
-    /**
-     * Processo completo de transformação
-     */
     public function transformPet($petImages, $userSession, $manualBreed)
     {
         try {
@@ -37,25 +33,20 @@ class PetTransformationService
 
             Log::info("Raça fornecida pelo usuário: {$detectedBreed}");
 
-            // Corrigido aqui: método correto é "generate"
             $prompt = $this->promptGenerator->generate($detectedBreed);
 
             Log::info("Prompt gerado", ["prompt" => $prompt]);
 
-            // 3. Usar imagem frontal como controle
             $controlImageUrl = $this->getControlImageUrl($petImages);
 
-            // 4. Chamar Replicate
             $replicateResult = $this->replicate->transformPetToHuman($controlImageUrl, $prompt);
 
             if (!$replicateResult["success"]) {
                 throw new \Exception("Falha na transformação: " . $replicateResult["error"]);
             }
 
-            // 5. Salvar resultado no histórico
             $this->updateTransformationHistory($userSession, $detectedBreed, $replicateResult);
 
-            // 6. Criar composição lado a lado
             $compositeImageUrl = $this->createSideBySideComposition(
                 $controlImageUrl,
                 $replicateResult["output_url"],
@@ -89,14 +80,24 @@ class PetTransformationService
 
     private function updateTransformationHistory($userSession, $breed, $replicateResult)
     {
-        TransformationHistory::where("user_session", $userSession)
+        $history = TransformationHistory::where("user_session", $userSession)
             ->where("breed_detected", $breed)
             ->latest()
-            ->first()
-            ->update([
+            ->first();
+
+        if ($history) {
+            $history->update([
                 "replicate_prediction_id" => $replicateResult["prediction_id"],
                 "result_image_url" => $replicateResult["output_url"]
             ]);
+        } else {
+            TransformationHistory::create([
+                "user_session" => $userSession,
+                "breed_detected" => $breed,
+                "replicate_prediction_id" => $replicateResult["prediction_id"],
+                "result_image_url" => $replicateResult["output_url"]
+            ]);
+        }
     }
 
     private function createSideBySideComposition($originalUrl, $transformedUrl, $userSession, $breedName)
@@ -121,3 +122,4 @@ class PetTransformationService
         return $simpleResult["success"] ? $simpleResult["composition_url"] : $transformedUrl;
     }
 }
+
