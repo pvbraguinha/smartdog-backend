@@ -21,10 +21,20 @@ class PetHumanController extends Controller
         try {
             $arquivos = $request->allFiles();
             $session = $request->input('session');
-            $especie = $request->input('especie'); // <-- NOVO
-            $breed = $request->input('breed');
-            $sex = $request->input('sex');
-            $age = $request->input('age');
+            $especie = $request->input('especie');
+            $breed   = $request->input('breed');
+            $sex     = $request->input('sex');
+            $age     = $request->input('age');
+
+            // Log para debug: todos os campos recebidos
+            Log::info('[UPLOAD] Dados recebidos', [
+                'session' => $session,
+                'especie' => $especie,
+                'breed'   => $breed,
+                'sex'     => $sex,
+                'age'     => $age,
+                'arquivos' => array_keys($arquivos)
+            ]);
 
             // Validação dos campos obrigatórios
             if (empty($especie) || empty($breed) || empty($sex) || empty($age)) {
@@ -33,8 +43,6 @@ class PetHumanController extends Controller
                     'error' => 'Preencha espécie, raça, sexo e idade do pet.'
                 ], 400);
             }
-
-            Log::info('🧪 Arquivos recebidos:', array_keys($arquivos));
 
             $pastas = [
                 'focinho' => 'focinho',
@@ -98,22 +106,31 @@ class PetHumanController extends Controller
             ];
 
             // Agora passa especie, breed, sex, age para o service!
-            $result = $this->transformationService->transformPet($urlsControle, $session, $especie, $breed, $sex, $age);
+            $result = $this->transformationService->transformPet(
+                $urlsControle,
+                $session,
+                $especie,
+                $breed,
+                $sex,
+                $age
+            );
 
             // Junta as URLs de todas as imagens salvas ao resultado
             $result['uploaded_images'] = $urls;
             $result['especie'] = $especie;
-            $result['breed'] = $breed;
-            $result['sex'] = $sex;
-            $result['age'] = $age;
+            $result['breed']   = $breed;
+            $result['sex']     = $sex;
+            $result['age']     = $age;
 
             return response()->json($result);
+
         } catch (\Exception $e) {
             Log::error("❌ Erro geral no upload/transformação: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
+                'success' => false,
                 'error' => $e->getMessage()
             ], 500);
         }

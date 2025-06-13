@@ -22,13 +22,16 @@ class PetTransformationController extends Controller
             'focinho' => 'nullable|image',
             'angulo'  => 'nullable|image',
             'breed'   => 'required|string',
+            'especie' => 'required|string',   // NOVO: campo obrigatório!
+            'sex'     => 'required|string',   // NOVO: campo obrigatório!
+            'age'     => 'required|string',   // NOVO: campo obrigatório!
             'session' => 'required|string',
         ]);
 
         $petImages = [];
 
         $allowedTypes = [
-            'frontal' => 'frontal',   // corrigido aqui
+            'frontal' => 'frontal',
             'focinho' => 'focinho',
             'angulo'  => 'angulo',
         ];
@@ -41,10 +44,14 @@ class PetTransformationController extends Controller
             }
         }
 
+        // Agora envia todos os campos corretamente!
         $result = $this->transformationService->transformPet(
             $petImages,
             $request->input('session'),
-            $request->input('breed')
+            $request->input('especie'),   // <-- Adicionado!
+            $request->input('breed'),     // Raça
+            $request->input('sex'),       // <-- Adicionado!
+            $request->input('age')        // <-- Adicionado!
         );
 
         return response()->json($result);
