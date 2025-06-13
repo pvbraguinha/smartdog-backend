@@ -1,3 +1,10 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use App\Services\PetTransformationService;
 
 class PetHumanController extends Controller
@@ -18,12 +25,17 @@ class PetHumanController extends Controller
 
             Log::info('🧪 Arquivos recebidos:', array_keys($arquivos));
 
-            $tipos = ['focinho', 'frontal', 'angulo'];
+            $pastas = [
+                'focinho' => 'focinho',
+                'frontal' => 'frontal',
+                'angulo'  => 'angulo',
+            ];
+
             $paths = [];
             $urls = [];
             $errors = [];
 
-            foreach ($tipos as $tipo) {
+            foreach ($pastas as $tipo => $pasta) {
                 if (!isset($arquivos[$tipo])) {
                     continue;
                 }
@@ -34,10 +46,11 @@ class PetHumanController extends Controller
                     continue;
                 }
 
-                $diretorio = "uploads/meupethumano/{$tipo}s";
+                $diretorio = "uploads/meupethumano/{$pasta}";
                 $path = Storage::disk('s3')->putFile($diretorio, $file);
                 $paths[$tipo] = $path;
-                $urls[$tipo] = Storage::disk('s3')->url($path); // Para usar com a IA
+                $urls[$tipo] = Storage::disk('s3')->url($path);
+                Log::info("✔️ {$tipo} salvo em: {$path}");
             }
 
             if (!isset($urls['frontal'])) {
@@ -47,7 +60,6 @@ class PetHumanController extends Controller
                 ], 400);
             }
 
-            // 🚀 Chama o serviço de transformação
             $result = $this->transformationService->transformPet($urls, $session, $breed);
 
             return response()->json($result);
