@@ -12,13 +12,16 @@ use App\Services\PetTransformationService;
 
 class PetTransformationServiceProvider extends ServiceProvider
 {
-    public function register()
+    /**
+     * Register services.
+     */
+    public function register(): void
     {
         $this->app->singleton(PromptGeneratorService::class);
         $this->app->singleton(ReplicateService::class);
         $this->app->singleton(ImageCompositionService::class);
         $this->app->singleton(AdvancedCompositionService::class);
-        
+
         $this->app->singleton(PetTransformationService::class, function ($app) {
             return new PetTransformationService(
                 $app->make(PromptGeneratorService::class),
@@ -28,8 +31,11 @@ class PetTransformationServiceProvider extends ServiceProvider
         });
     }
 
-    public function boot()
+    /**
+     * Bootstrap services.
+     */
+    public function boot(): void
     {
-        //
+        // Nenhuma ação necessária no boot por enquanto
     }
 }
