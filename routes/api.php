@@ -142,7 +142,6 @@ Route::get('/api/debug-replicate', function () {
     ]);
 });
 
-use Illuminate\Support\Facades\DB;
 
 Route::get('/pet-human-count', function () {
     // Conta apenas os pets realmente transformados (com imagem resultante)
