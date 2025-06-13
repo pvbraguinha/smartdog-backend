@@ -22,6 +22,16 @@ class PetHumanController extends Controller
             $arquivos = $request->allFiles();
             $session = $request->input('session');
             $breed = $request->input('breed');
+            $sex = $request->input('sex');
+            $age = $request->input('age');
+
+            // Validação dos campos obrigatórios
+            if (empty($breed) || empty($sex) || empty($age)) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Preencha raça, sexo e idade do pet.'
+                ], 400);
+            }
 
             Log::info('🧪 Arquivos recebidos:', array_keys($arquivos));
 
@@ -84,13 +94,16 @@ class PetHumanController extends Controller
             // Só envia a frontal como imagem de controle pro service
             $urlsControle = [
                 'frontal' => $urls['frontal'],
-                // Focinho e angulo são armazenados no S3 e podem ser usados no futuro, mas não enviados pro Replicate agora
             ];
 
-            $result = $this->transformationService->transformPet($urlsControle, $session, $breed);
+            // Agora passa breed, sex, age para o service!
+            $result = $this->transformationService->transformPet($urlsControle, $session, $breed, $sex, $age);
 
             // Junta as URLs de todas as imagens salvas ao resultado
             $result['uploaded_images'] = $urls;
+            $result['breed'] = $breed;
+            $result['sex'] = $sex;
+            $result['age'] = $age;
 
             return response()->json($result);
         } catch (\Exception $e) {

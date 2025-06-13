@@ -22,13 +22,17 @@ class PetTransformationService
         $this->imageCompositionService = $imageCompositionService;
     }
 
-    public function transformPet($petImages, $userSession, $manualBreed)
+    // Agora aceita breed, sex, age
+    public function transformPet($petImages, $userSession, $manualBreed, $sex = null, $age = null)
     {
         try {
             $detectedBreed = $manualBreed;
 
             if (empty($detectedBreed)) {
                 throw new \Exception("A raça do pet deve ser fornecida pelo usuário.");
+            }
+            if (empty($sex) || empty($age)) {
+                throw new \Exception("Sexo e idade do pet são obrigatórios.");
             }
 
             Log::info("Raça fornecida pelo usuário: {$detectedBreed}");
@@ -39,7 +43,6 @@ class PetTransformationService
 
             $controlImageUrl = $this->getControlImageUrl($petImages);
 
-            // Log para depuração: qual imagem será enviada ao Replicate
             Log::info('🐾 Imagem de controle enviada para Replicate:', ['url' => $controlImageUrl]);
 
             if (empty($controlImageUrl)) {
@@ -52,9 +55,9 @@ class PetTransformationService
                 throw new \Exception("Falha na transformação: " . $replicateResult["error"]);
             }
 
-            $this->updateTransformationHistory($userSession, $detectedBreed, $replicateResult);
+            // Salva tudo junto no histórico!
+            $this->updateTransformationHistory($userSession, $detectedBreed, $replicateResult, $sex, $age);
 
-            // Cria a imagem composta (usando sempre a assinatura correta)
             $compositeImageUrl = $this->createSideBySideComposition(
                 $controlImageUrl,
                 $replicateResult["output_url"],
@@ -68,7 +71,10 @@ class PetTransformationService
                 "transformed_image" => $replicateResult["output_url"],
                 "composite_image" => $compositeImageUrl,
                 "prompt_used" => $prompt,
-                "processing_time" => $replicateResult["processing_time"]
+                "processing_time" => $replicateResult["processing_time"],
+                "breed" => $detectedBreed,
+                "sex" => $sex,
+                "age" => $age,
             ];
 
         } catch (\Exception $e) {
@@ -80,31 +86,34 @@ class PetTransformationService
         }
     }
 
-    // AJUSTADO: só permite "frontal" como imagem de controle
     private function getControlImageUrl($petImages)
     {
         return $petImages["frontal"] ?? null;
     }
 
-    private function updateTransformationHistory($userSession, $breed, $replicateResult)
+    // Agora aceita $sex e $age
+    private function updateTransformationHistory($userSession, $breed, $replicateResult, $sex = null, $age = null)
     {
         $history = TransformationHistory::where("user_session", $userSession)
             ->where("breed_detected", $breed)
             ->latest()
             ->first();
 
+        $data = [
+            "replicate_prediction_id" => $replicateResult["prediction_id"],
+            "result_image_url" => $replicateResult["output_url"],
+            "breed" => $breed,
+            "sex" => $sex,
+            "age" => $age,
+        ];
+
         if ($history) {
-            $history->update([
-                "replicate_prediction_id" => $replicateResult["prediction_id"],
-                "result_image_url" => $replicateResult["output_url"]
-            ]);
+            $history->update($data);
         } else {
-            TransformationHistory::create([
+            TransformationHistory::create(array_merge([
                 "user_session" => $userSession,
                 "breed_detected" => $breed,
-                "replicate_prediction_id" => $replicateResult["prediction_id"],
-                "result_image_url" => $replicateResult["output_url"]
-            ]);
+            ], $data));
         }
     }
 

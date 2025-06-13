@@ -13,5 +13,8 @@ class TransformationHistory extends Model
         'breed_detected',
         'replicate_prediction_id',
         'result_image_url',
+        'breed',
+        'sex',
+        'age',
     ];
 }
