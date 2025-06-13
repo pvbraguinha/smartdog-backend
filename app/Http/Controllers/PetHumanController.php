@@ -1,19 +1,21 @@
-<?php
-
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
+use App\Services\PetTransformationService;
 
 class PetHumanController extends Controller
 {
+    protected $transformationService;
+
+    public function __construct(PetTransformationService $transformationService)
+    {
+        $this->transformationService = $transformationService;
+    }
+
     public function upload(Request $request)
     {
         try {
             $arquivos = $request->allFiles();
+            $session = $request->input('session');
+            $breed = $request->input('breed');
 
-            // Loga os nomes dos campos recebidos
             Log::info('🧪 Arquivos recebidos:', array_keys($arquivos));
 
             $tipos = ['focinho', 'frontal', 'angulo'];
@@ -23,7 +25,6 @@ class PetHumanController extends Controller
 
             foreach ($tipos as $tipo) {
                 if (!isset($arquivos[$tipo])) {
-                    $errors[$tipo] = 'Campo não enviado.';
                     continue;
                 }
 
@@ -36,23 +37,25 @@ class PetHumanController extends Controller
                 $diretorio = "uploads/meupethumano/{$tipo}s";
                 $path = Storage::disk('s3')->putFile($diretorio, $file);
                 $paths[$tipo] = $path;
-
-                $urls[$tipo] = Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(15));
-
-                Log::info("✔️ {$tipo} salvo no S3 em: {$path}");
+                $urls[$tipo] = Storage::disk('s3')->url($path); // Para usar com a IA
             }
 
-            return response()->json([
-                'status' => count($errors) > 0 ? 'parcial' : 'completo',
-                'paths' => $paths,
-                'temporary_urls' => $urls,
-                'errors' => $errors,
-                'mock_human_image' => asset('mock/pethuman.jpg'),
-            ]);
+            if (!isset($urls['frontal'])) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Imagem frontal é obrigatória.'
+                ], 400);
+            }
+
+            // 🚀 Chama o serviço de transformação
+            $result = $this->transformationService->transformPet($urls, $session, $breed);
+
+            return response()->json($result);
         } catch (\Exception $e) {
-            Log::error("❌ Erro geral no upload: " . $e->getMessage(), [
+            Log::error("❌ Erro geral no upload/transformação: " . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
             ]);
+
             return response()->json([
                 'error' => $e->getMessage()
             ], 500);
