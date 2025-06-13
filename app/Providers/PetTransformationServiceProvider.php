@@ -1,35 +1,97 @@
 <?php
-// app/Providers/PetTransformationServiceProvider.php
+// app/Services/PetTransformationService.php
 
-namespace App\Providers;
+namespace App\Services;
 
-use Illuminate\Support\ServiceProvider;
-use App\Services\PromptGeneratorService;
-use App\Services\ReplicateService;
-use App\Services\ImageCompositionService;
-use App\Services\AdvancedCompositionService;
-use App\Services\PetTransformationService;
+use App\Models\TransformationHistory;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
-class PetTransformationServiceProvider extends ServiceProvider
+class PetTransformationService
 {
-    public function register()
-    {
-        $this->app->singleton(PromptGeneratorService::class);
-        $this->app->singleton(ReplicateService::class);
-        $this->app->singleton(ImageCompositionService::class);
-        $this->app->singleton(AdvancedCompositionService::class);
-        
-        $this->app->singleton(PetTransformationService::class, function ($app) {
-            return new PetTransformationService(
-                $app->make(PromptGeneratorService::class),
-                $app->make(ReplicateService::class),
-                $app->make(ImageCompositionService::class) // Injetando o serviço de composição
-            );
-        });
+    private $promptGenerator;
+    private $replicate;
+    private $imageCompositionService;
+
+    public function __construct(
+        PromptGeneratorService $promptGenerator,
+        ReplicateService $replicate,
+        ImageCompositionService $imageCompositionService
+    ) {
+        $this->promptGenerator = $promptGenerator;
+        $this->replicate = $replicate;
+        $this->imageCompositionService = $imageCompositionService;
     }
 
-    public function boot()
+    /**
+     * Processo completo de transformação
+     */
+    public function transformPet($petImages, $userSession, $manualBreed)
     {
-        //
+        try {
+            $detectedBreed = $manualBreed;
+
+            if (empty($detectedBreed)) {
+                throw new \Exception("A raça do pet deve ser fornecida pelo usuário.");
+            }
+
+            Log::info("Raça fornecida pelo usuário: {$detectedBreed}");
+
+            $prompt = $this->promptGenerator->generate($detectedBreed);
+            Log::info("Prompt gerado", ["prompt" => $prompt]);
+
+            $controlImageUrl = $this->getControlImageUrl($petImages);
+
+            $replicateResult = $this->replicate->transformPetToHuman($controlImageUrl, $prompt);
+
+            if (!$replicateResult["success"]) {
+                throw new \Exception("Falha na transformação: " . $replicateResult["error"]);
+            }
+
+            $this->updateTransformationHistory($userSession, $detectedBreed, $replicateResult);
+
+            $compositeImageUrl = $this->imageCompositionService->createProfessionalComposition(
+                $controlImageUrl,
+                $replicateResult["output_url"],
+                $userSession
+            )['composition_url'] ?? $replicateResult["output_url"];
+
+            return [
+                "success" => true,
+                "breed_detected" => $detectedBreed,
+                "original_image" => $controlImageUrl,
+                "transformed_image" => $replicateResult["output_url"],
+                "composite_image" => $compositeImageUrl,
+                "prompt_used" => $prompt,
+                "processing_time" => $replicateResult["processing_time"]
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Erro na transformação: " . $e->getMessage());
+            return [
+                "success" => false,
+                "error" => $e->getMessage()
+            ];
+        }
+    }
+
+    private function getControlImageUrl($petImages)
+    {
+        return $petImages["frontal"] ?? $petImages["focinho"] ?? $petImages["angulo"];
+    }
+
+    private function updateTransformationHistory($userSession, $breed, $replicateResult)
+    {
+        $history = TransformationHistory::where("user_session", $userSession)
+            ->where("breed_detected", $breed)
+            ->latest()
+            ->first();
+
+        if ($history) {
+            $history->update([
+                "replicate_prediction_id" => $replicateResult["prediction_id"],
+                "result_image_url" => $replicateResult["output_url"]
+            ]);
+        }
     }
 }
