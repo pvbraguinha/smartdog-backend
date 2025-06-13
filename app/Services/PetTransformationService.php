@@ -39,6 +39,13 @@ class PetTransformationService
 
             $controlImageUrl = $this->getControlImageUrl($petImages);
 
+            // Log para depuração: qual imagem será enviada ao Replicate
+            Log::info('🐾 Imagem de controle enviada para Replicate:', ['url' => $controlImageUrl]);
+
+            if (empty($controlImageUrl)) {
+                throw new \Exception("Nenhuma imagem frontal foi enviada para a transformação.");
+            }
+
             $replicateResult = $this->replicate->transformPetToHuman($controlImageUrl, $prompt);
 
             if (!$replicateResult["success"]) {
@@ -73,9 +80,10 @@ class PetTransformationService
         }
     }
 
+    // AJUSTADO: só permite "frontal" como imagem de controle
     private function getControlImageUrl($petImages)
     {
-        return $petImages["frontal"] ?? $petImages["focinho"] ?? $petImages["angulo"];
+        return $petImages["frontal"] ?? null;
     }
 
     private function updateTransformationHistory($userSession, $breed, $replicateResult)
@@ -102,14 +110,13 @@ class PetTransformationService
 
     private function createSideBySideComposition($originalUrl, $transformedUrl, $userSession)
     {
-        // Só usa uma assinatura, sempre
         $result = $this->imageCompositionService->createProfessionalComposition(
             $originalUrl,
             $transformedUrl,
             $userSession
         );
 
-        // Se falhar, retorna a transformada pura (fallback)
         return $result["success"] ? $result["composition_url"] : $transformedUrl;
     }
 }
+
