@@ -5,103 +5,84 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class ImageCompositionService
 {
     protected $outputWidth = 1024;
     protected $outputHeight = 512;
     protected $imageSize = 512;
-    protected $imageManager;
 
     public function __construct()
     {
-        $this->imageManager = new ImageManager(new Driver());
+        Image::configure(['driver' => 'gd']);
     }
 
-    public function createSideBySideComposition($originalImageUrl, $transformedImageUrl, $userSession)
+    public function createProfessionalComposition($originalImageUrl, $transformedImageUrl, $userSession)
     {
         try {
-            $originalImage = $this->downloadAndProcessImage($originalImageUrl, 'original');
-            $transformedImage = $this->downloadAndProcessImage($transformedImageUrl, 'transformed');
+            $original = $this->downloadAndProcessImage($originalImageUrl, "original");
+            $transformed = $this->downloadAndProcessImage($transformedImageUrl, "transformed");
 
-            $canvas = $this->imageManager->canvas($this->outputWidth, $this->outputHeight, '#ffffff');
+            $canvas = Image::canvas($this->outputWidth, $this->outputHeight, '#f8f9fa');
 
-            $originalResized = $this->resizeImageMaintainAspect($originalImage, $this->imageSize);
-            $transformedResized = $this->resizeImageMaintainAspect($transformedImage, $this->imageSize);
+            $originalResized = $this->resizeImageMaintainAspect($original, $this->imageSize);
+            $transformedResized = $this->resizeImageMaintainAspect($transformed, $this->imageSize);
+
+            $canvas->rectangle(0, 0, $this->outputWidth, $this->outputHeight, function ($draw) {
+                $draw->background('#f8f9fa');
+            });
 
             $leftX = ($this->imageSize - $originalResized->width()) / 2;
             $leftY = ($this->outputHeight - $originalResized->height()) / 2;
-
             $rightX = $this->imageSize + ($this->imageSize - $transformedResized->width()) / 2;
             $rightY = ($this->outputHeight - $transformedResized->height()) / 2;
 
             $canvas->insert($originalResized, 'top-left', $leftX, $leftY);
             $canvas->insert($transformedResized, 'top-left', $rightX, $rightY);
 
-            $this->addDividerLine($canvas);
-            $this->addLabels($canvas);
+            // Divider line
+            $canvas->line(
+                $this->imageSize,
+                0,
+                $this->imageSize,
+                $this->outputHeight,
+                function ($draw) {
+                    $draw->color('#adb5bd');
+                    $draw->width(2);
+                }
+            );
+
+            // Labels
+            $canvas->text("Original", $leftX + 10, $leftY + 20, function ($font) {
+                $font->size(20);
+                $font->color('#343a40');
+                $font->align('left');
+            });
+
+            $canvas->text("Versão Humana", $rightX + 10, $rightY + 20, function ($font) {
+                $font->size(20);
+                $font->color('#343a40');
+                $font->align('left');
+            });
+
+            // Marca d'água opcional
+            $canvas->text("Meu Pet Humano", $this->outputWidth - 20, $this->outputHeight - 10, function ($font) {
+                $font->size(12);
+                $font->color('#ced4da');
+                $font->align('right');
+                $font->valign('bottom');
+            });
 
             $compositionUrl = $this->saveCompositionToS3($canvas, $userSession);
 
             return [
                 'success' => true,
-                'composition_url' => $compositionUrl,
-                'width' => $this->outputWidth,
-                'height' => $this->outputHeight
+                'composition_url' => $compositionUrl
             ];
+
         } catch (\Exception $e) {
-            Log::error("Erro na composição de imagens: " . $e->getMessage());
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    public function createMultipleVariationsComposition($originalImageUrl, $transformedImages, $userSession)
-    {
-        try {
-            $variationCount = count($transformedImages);
-            $gridCols = min(3, $variationCount + 1);
-            $gridRows = ceil(($variationCount + 1) / $gridCols);
-
-            $canvasWidth = $gridCols * $this->imageSize;
-            $canvasHeight = $gridRows * $this->imageSize;
-
-            $canvas = $this->imageManager->canvas($canvasWidth, $canvasHeight, '#ffffff');
-
-            $originalImage = $this->downloadAndProcessImage($originalImageUrl, 'original');
-            $originalResized = $this->resizeImageMaintainAspect($originalImage, $this->imageSize);
-            $canvas->insert($originalResized, 'top-left', 0, 0);
-
-            $position = 1;
-            foreach ($transformedImages as $transformedUrl) {
-                $row = floor($position / $gridCols);
-                $col = $position % $gridCols;
-
-                $x = $col * $this->imageSize;
-                $y = $row * $this->imageSize;
-
-                $transformedImage = $this->downloadAndProcessImage($transformedUrl, 'variation_' . $position);
-                $transformedResized = $this->resizeImageMaintainAspect($transformedImage, $this->imageSize);
-
-                $canvas->insert($transformedResized, 'top-left', $x, $y);
-                $position++;
-            }
-
-            $compositionUrl = $this->saveCompositionToS3($canvas, $userSession, 'variations');
-
-            return [
-                'success' => true,
-                'composition_url' => $compositionUrl,
-                'width' => $canvasWidth,
-                'height' => $canvasHeight,
-                'grid' => ['cols' => $gridCols, 'rows' => $gridRows]
-            ];
-        } catch (\Exception $e) {
-            Log::error("Erro na composição de variações: " . $e->getMessage());
+            Log::error("Erro na composição profissional: " . $e->getMessage());
             return [
                 'success' => false,
                 'error' => $e->getMessage()
@@ -111,87 +92,25 @@ class ImageCompositionService
 
     protected function downloadAndProcessImage($imageUrl, $type)
     {
-        try {
-            $imageContent = file_get_contents($imageUrl);
+        $content = file_get_contents($imageUrl);
+        if (!$content) throw new \Exception("Erro ao baixar imagem {$type}");
 
-            if (!$imageContent) {
-                throw new \Exception("Falha ao baixar imagem: {$type}");
-            }
-
-            $image = $this->imageManager->read($imageContent);
-            $image->sharpen(10);
-
-            return $image;
-        } catch (\Exception $e) {
-            Log::error("Erro ao processar imagem {$type}: " . $e->getMessage());
-            throw $e;
-        }
+        return Image::make($content)->sharpen(10);
     }
 
     protected function resizeImageMaintainAspect($image, $maxSize)
     {
-        $width = $image->width();
-        $height = $image->height();
-
-        if ($width > $height) {
-            $image->resize($maxSize, null, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
-        } else {
-            $image->resize(null, $maxSize, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
-        }
-
-        return $image;
-    }
-
-    protected function addDividerLine($canvas)
-    {
-        $canvas->line(
-            $this->imageSize, 0,
-            $this->imageSize, $this->outputHeight,
-            function ($draw) {
-                $draw->color('#cccccc');
-                $draw->width(2);
-            }
-        );
-    }
-
-    protected function addLabels($canvas)
-    {
-        $canvas->text('Original', 10, 30, function ($font) {
-            $font->size(20);
-            $font->color('#333333');
-            $font->align('left');
-        });
-
-        $canvas->text('Versão Humana', $this->imageSize + 10, 30, function ($font) {
-            $font->size(20);
-            $font->color('#333333');
-            $font->align('left');
+        return $image->resize($maxSize, null, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
         });
     }
 
-    protected function saveCompositionToS3($canvas, $userSession, $type = 'composition')
+    protected function saveCompositionToS3($canvas, $userSession)
     {
-        try {
-            $filename = "compositions/{$userSession}_{$type}_" . time() . ".jpg";
-            $imageData = $canvas->toJpeg(90)->toString();
-
-            $path = Storage::disk('s3')->put($filename, $imageData);
-
-            if (!$path) {
-                throw new \Exception("Falha ao salvar composição no S3");
-            }
-
-            return Storage::disk('s3')->url($filename);
-        } catch (\Exception $e) {
-            Log::error("Erro ao salvar composição: " . $e->getMessage());
-            throw $e;
-        }
+        $filename = "compositions/{$userSession}_professional_" . time() . ".jpg";
+        $imageData = $canvas->encode("jpg", 90);
+        Storage::disk("s3")->put($filename, $imageData->__toString());
+        return Storage::disk("s3")->url($filename);
     }
 }
-
