@@ -28,6 +28,6 @@ services:
           name: smartdog-db
           property: connectionString
       - key: REPLICATE_API_TOKEN
-        value: r8_PHWq6s0NJIHPqmcsngUszPrkoxxd6gH0y9mPq
+        value: ${REPLICATE_API_TOKEN}
       - key: REPLICATE_MODEL_VERSION
-        value: fermatresearch/sdxl-controlnet-lora:3bb13fe1c33c35987b33792b01b71ed6529d03f165d1c2416375859f09ca9fef
+        value: ${REPLICATE_MODEL_VERSION}
