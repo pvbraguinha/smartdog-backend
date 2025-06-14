@@ -33,7 +33,8 @@ class PromptGeneratorService
             : ($this->racasIngles[$raca] ?? ucfirst($raca));
 
         // PROMPT FINAL: 100% focado em humano realista, inspirado na sua referência
-        return "A hyper-realistic portrait of a {$idadeTexto} inspired by an {$racaEn} dog: muscular build, shaved head, deep-set eyes, silver-gray hoodie, short beard, confident expression, steel gray eyes, smooth skin, urban streetwear style, symmetrical lighting, DSLR quality, cinematic background";
+        return "A hyper-realistic portrait of a {$idadeTexto} {$genero}, with human features inspired by the personality and essence of a {$racaEn} dog. The person has a confident expression, muscular build, shaved head, deep-set eyes, silver-gray hoodie, short beard, smooth skin, symmetrical facial structure, and stylish urban streetwear. DSLR quality, cinematic background, expressive eyes.";
+
     }
 
     public function generateNegativePrompt(): string
