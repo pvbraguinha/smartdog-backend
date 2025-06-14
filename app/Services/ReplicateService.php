@@ -32,11 +32,17 @@ class ReplicateService
                 'prompt' => $prompt,
                 'negative_prompt' => $negativePrompt,
                 'img2img' => true,
-                'condition_scale' => 0.5,
-                'strength' => 0.8,
-                'seed' => $seed,
+                'refine' => 'base_image_refiner',
                 'refine_steps' => 20,
+                'condition_scale' => 0.5,
+                'guidance_scale' => 7.5,
+                'scheduler' => 'K_EULER',
+                'apply_watermark' => false,
+                'strength' => 0.8,
+                'num_outputs' => 1,
                 'num_inference_steps' => 40,
+                'seed' => $seed,
+                'lora_scale' => 0.95,
                 'lora_weights' => 'https://pbxt.replicate.delivery/mwN3AFyYZyouOB03Uhw8ubKW9rpqMgdtL9zYV9GF2WGDiwbE/trained_model.tar'
             ]
         ]);
