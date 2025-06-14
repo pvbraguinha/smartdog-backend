@@ -67,6 +67,11 @@ Route::get('/check-env', function () {
 
 });
 
+use App\Http\Controllers\DalleController;
+
+Route::post('/gerar-imagem', [DalleController::class, 'gerar']);
+
+
 use Illuminate\Support\Facades\Storage;
 
 Route::get('/public-gallery', function () {
