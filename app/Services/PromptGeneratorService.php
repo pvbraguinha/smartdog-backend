@@ -5,33 +5,33 @@ namespace App\Services;
 class PromptGeneratorService
 {
     private $racasIngles = [
-        // ... [mantenha seu dicionário de raças aqui]
+        // ... (mesmo dicionário de raças)
     ];
 
-    public function generate($especie, $raca, $sexo = null, $idade = null): array
+    // Conversão idade animal -> humana
+    private function idadeHumana($animal, $idade)
+    {
+        if ($animal === 'dog') {
+            return $idade * 7;
+        }
+        if ($animal === 'cat') {
+            if ($idade == 1) return 15;
+            if ($idade == 2) return 24;
+            if ($idade > 2) return 24 + (($idade - 2) * 4);
+        }
+        return $idade;
+    }
+
+    public function generate($especie, $raca, $sexo = null, $idade = null): string
     {
         $especie = strtolower(trim($especie));
         $raca = strtolower(trim($raca));
         $sexo = $sexo ? strtolower($sexo) : "male";
-
-        // Tradução da espécie para inglês
         $animalEn = ($especie == 'gato' || $especie == 'gata') ? 'cat' : 'dog';
+        $idadeHumana = $idade ? $this->idadeHumana($animalEn, (int)$idade) : null;
+        $idadeStr = $idadeHumana ? "{$idadeHumana} years old" : "";
 
-        // Conversão de idade animal para idade humana
-        $idadeHumana = null;
-        if ($idade && is_numeric($idade)) {
-            if ($animalEn == 'dog') {
-                $idadeHumana = $idade * 7;
-            } else {
-                $idadeHumana = $idade * 6;
-            }
-        }
-        $idadeStr = $idadeHumana ? "{$idadeHumana} year old human" : "";
-
-        // Detecta SRD/vira-lata/etc
         $srdLabels = ['srd', 'sem raça definida', 'vira-lata', '', null];
-
-        // Decide raça final (traduz para inglês se possível)
         if (in_array($raca, $srdLabels, true)) {
             $racaPrompt = "mixed breed $animalEn";
         } else {
@@ -40,28 +40,23 @@ class PromptGeneratorService
         }
 
         $styles = [
-            "wearing a gray hoodie, gold chain, streetwear, urban city background with graffiti, moody cinematic lighting, confident and intimidating expression, gangster vibe",
-            "wearing a designer jacket, luxury watch, neon city lights, elegant modern background, sophisticated and rich vibe, playboy style",
-            "snapback cap, hoodie, music studio background, rapper style, cool and modern attitude, energetic vibe",
-            "hooded costume, city skyline at night, heroic and epic expression, cinematic look, superhero character, dramatic shadows",
+            "urban streetwear, confident attitude, background full of graffiti, Instagram-style, Gen Z fashion",
+            "luxury suit, modern penthouse, influencer, Miami vibes, millionaire lifestyle",
+            "hoodie, gold chain, posing like a rapper, moody lighting, viral on TikTok",
+            "leather jacket, motorbike, cinematic lighting, rebel look, Netflix series style",
+            "hipster style, beanie hat, trendy beard, coffee shop background, social media influencer",
+            "elegant dress, party look, red carpet style, paparazzi flashes, trending on Instagram",
         ];
         $chosenStyle = $styles[array_rand($styles)];
 
-        // PROMPT positivo
-        $prompt = "Ultra-realistic digital portrait of a young human with anthropomorphic features of a {$racaPrompt}: ";
-        $prompt .= "dog nose, fur, but human eyes and face, human hair, realistic skin, no animal mouth or animal proportions. ";
-        $prompt .= $chosenStyle;
-        $prompt .= ", half-human half-{$animalEn}, humanized, photorealistic, digital art, trending on Artstation, concept art";
-        if ($sexo) $prompt .= ", {$sexo}";
-        if ($idadeStr) $prompt .= ", {$idadeStr}";
+        // NOVO prompt, focando para humano real:
+        $prompt = "Ultra realistic hyper-detailed digital portrait of a HUMAN person with subtle features inspired by a {$racaPrompt}, ";
+        $prompt .= "FACE SHOULD BE FULLY HUMAN, only very subtle animal hints like fur texture, nose shape or eye color. ";
+        $prompt .= "The portrait should look like a real influencer, not a furry or anthropomorphic animal. ";
+        $prompt .= "The person is {$sexo}, {$idadeStr}. ";
+        $prompt .= "Style: {$chosenStyle}. ";
+        $prompt .= "Photography, studio lighting, skin pores, facial expression, depth of field, masterpiece, trending on ArtStation, shot by Annie Leibovitz, editorial Vogue magazine.";
 
-        // PROMPT negativo — para evitar "animal demais" na imagem
-        $negativePrompt = "cartoon, illustration, painting, low quality, animal face, dog face, cat face, animal nose, muzzle, snout, extra legs, extra arms, fangs, paws, animal mouth, ugly, deformed, blurry, distortion, bad anatomy, bad proportions, animal ears";
-
-        return [
-            'prompt' => $prompt,
-            'negative_prompt' => $negativePrompt
-        ];
+        return $prompt;
     }
 }
-
