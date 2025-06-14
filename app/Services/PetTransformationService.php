@@ -36,6 +36,8 @@ class PetTransformationService
 
             $prompt = $this->promptGenerator->generate($especie, $manualBreed, $sex, $age);
             $negativePrompt = $this->promptGenerator->generateNegativePrompt();
+$idadeHumana = $this->promptGenerator->calcularIdadeHumana($especie, $age);
+
 
             Log::info("Prompt gerado", ["prompt" => $prompt]);
 
@@ -73,6 +75,8 @@ class PetTransformationService
                 "breed" => $manualBreed,
                 "sex" => $sex,
                 "age" => $age,
+"idade_humana" => $idadeHumana,
+
             ];
 
         } catch (\Exception $e) {

@@ -5,7 +5,7 @@ namespace App\Services;
 class PromptGeneratorService
 {
     private $racasIngles = [
-        // ... sua lista original de raças
+        // ... sua lista
     ];
 
     public function generate($especie, $raca, $sexo = null, $idade = null): string
@@ -14,70 +14,61 @@ class PromptGeneratorService
         $raca = strtolower(trim($raca));
         $sexo = $sexo ? strtolower($sexo) : "male";
 
-        // 🧠 Converte idade animal textual ("10 dias", "3 meses", "2 anos") em anos decimais
         $idadeEmAnos = $this->converterIdadeParaAnos($idade);
         $idadeHumana = $idadeEmAnos;
 
-        // Aplica fator de conversão
         if (in_array($especie, ['cachorro', 'cão', 'cao', 'dog'])) {
             $idadeHumana = round($idadeEmAnos * 7);
         } elseif (in_array($especie, ['gato', 'gata', 'cat'])) {
             $idadeHumana = round($idadeEmAnos * 6);
         }
 
-        $idadeStr = $idade ? "{$idadeHumana} years old" : "";
+        $idadeStr = $idade ? "{$idadeHumana}-year-old human" : "young adult";
 
-        // Tradução da espécie
         $animalEn = ($especie == 'gato' || $especie == 'gata') ? 'cat' : 'dog';
-
-        // Raça
         $srdLabels = ['srd', 'sem raça definida', 'vira-lata', '', null];
-        if (in_array($raca, $srdLabels, true)) {
-            $racaPrompt = "mixed breed $animalEn";
-        } else {
-            $racaEn = $this->racasIngles[$raca] ?? ucfirst($raca);
-            $racaPrompt = "$racaEn $animalEn";
-        }
+        $racaEn = in_array($raca, $srdLabels, true)
+            ? "mixed breed $animalEn"
+            : ($this->racasIngles[$raca] ?? ucfirst($raca));
 
-        $styles = [
-            "wearing a gray hoodie, gold chain, streetwear, urban city background with graffiti, moody cinematic lighting, confident and intimidating expression, gangster vibe",
-            "wearing a designer jacket, luxury watch, neon city lights, elegant modern background, sophisticated and rich vibe, playboy style",
-            "snapback cap, hoodie, music studio background, rapper style, cool and modern attitude, energetic vibe",
-            "hooded costume, city skyline at night, heroic and epic expression, cinematic look, superhero character, dramatic shadows",
-        ];
-        $chosenStyle = $styles[array_rand($styles)];
-
-        $prompt = "Ultra-realistic digital portrait of a young human with anthropomorphic features of a {$racaPrompt}: dog nose, fur, but human eyes and face. ";
-        $prompt .= $chosenStyle;
-        $prompt .= ", half-human half-dog, humanized, photorealistic, digital art, trending on Artstation, concept art";
-        if ($sexo) $prompt .= ", {$sexo}";
-        if ($idadeStr) $prompt .= ", {$idadeStr}";
-
-        return $prompt;
+        return "A hyper-realistic portrait of a {$idadeStr} inspired by a {$racaEn}: DSLR quality, detailed face, smooth skin, confident expression, cinematic lighting, symmetrical features, natural background, urban style";
     }
 
     public function generateNegativePrompt(): string
     {
         return implode(', ', [
-            "animal snout",
-            "animal ears",
+            "deformed",
+            "mutated",
+            "ugly",
+            "extra limbs",
+            "low quality",
+            "blurry",
+            "bad anatomy",
+            "poorly drawn face",
+            "asymmetry",
+            "disfigured",
+            "distorted",
+            "cartoonish",
+            "surreal",
+            "animal face",
             "fur",
             "furry",
-            "non-human nose",
-            "dog nose",
-            "cat face",
-            "blurred face",
-            "extra limbs",
-            "mutated body",
-            "deformed anatomy",
-            "non-human eyes",
-            "zombie",
-            "creature",
-            "bad anatomy",
-            "low quality",
-            "cartoon",
-            "monstrous"
+            "dog snout",
+            "animal nose"
         ]);
+    }
+
+    public function calcularIdadeHumana(string $especie, string $idade): int
+    {
+        $idadeEmAnos = $this->converterIdadeParaAnos($idade);
+
+        if (in_array(strtolower($especie), ['cachorro', 'cao', 'cão', 'dog'])) {
+            return round($idadeEmAnos * 7);
+        } elseif (in_array(strtolower($especie), ['gato', 'gata', 'cat'])) {
+            return round($idadeEmAnos * 6);
+        }
+
+        return round($idadeEmAnos);
     }
 
     private function converterIdadeParaAnos(?string $idade): float
@@ -85,7 +76,7 @@ class PromptGeneratorService
         if (!$idade) return 0;
 
         $idade = strtolower(trim($idade));
-        $idade = str_replace(['de ', 'aproximadamente '], '', $idade); // limpa entrada
+        $idade = str_replace(['de ', 'aproximadamente '], '', $idade);
 
         if (str_contains($idade, 'dia')) {
             preg_match('/(\d+)/', $idade, $matches);
@@ -102,7 +93,6 @@ class PromptGeneratorService
             return isset($matches[1]) ? floatval($matches[1]) : 0;
         }
 
-        // Se não conseguir detectar, tenta converter direto
         return is_numeric($idade) ? floatval($idade) : 0;
     }
 }
