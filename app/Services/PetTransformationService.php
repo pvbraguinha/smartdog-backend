@@ -36,9 +36,9 @@ class PetTransformationService
             Log::info("Espécie fornecida pelo usuário: {$especie}, Raça: {$manualBreed}");
 
             // Prompt dinâmico!
-            $prompt = $this->promptGenerator->generate($especie, $manualBreed, $sex, $age);
+            $prompts = $this->promptGenerator->generate($especie, $manualBreed, $sex, $age); // <-- Agora retorna array
 
-            Log::info("Prompt gerado", ["prompt" => $prompt]);
+            Log::info("Prompts gerados", $prompts);
 
             $controlImageUrl = $this->getControlImageUrl($petImages);
 
@@ -48,7 +48,8 @@ class PetTransformationService
                 throw new \Exception("Nenhuma imagem frontal foi enviada para a transformação.");
             }
 
-            $replicateResult = $this->replicate->transformPetToHuman($controlImageUrl, $prompt);
+            // Passa array de prompts (positive + negative)
+            $replicateResult = $this->replicate->transformPetToHuman($controlImageUrl, $prompts);
 
             if (!$replicateResult["success"]) {
                 throw new \Exception("Falha na transformação: " . $replicateResult["error"]);
@@ -70,7 +71,8 @@ class PetTransformationService
                 "original_image" => $controlImageUrl,
                 "transformed_image" => $replicateResult["output_url"],
                 "composite_image" => $compositeImageUrl,
-                "prompt_used" => $prompt,
+                "prompt_used" => $prompts['prompt'],
+                "negative_prompt_used" => $prompts['negative_prompt'],
                 "processing_time" => $replicateResult["processing_time"],
                 "breed" => $manualBreed,
                 "sex" => $sex,
