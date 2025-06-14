@@ -15,15 +15,16 @@ class PromptGeneratorService
         $sexo = $sexo ? strtolower($sexo) : "male";
 
         $idadeEmAnos = $this->converterIdadeParaAnos($idade);
-        $idadeHumana = $idadeEmAnos;
-
         if (in_array($especie, ['cachorro', 'cão', 'cao', 'dog'])) {
             $idadeHumana = round($idadeEmAnos * 7);
         } elseif (in_array($especie, ['gato', 'gata', 'cat'])) {
             $idadeHumana = round($idadeEmAnos * 6);
+        } else {
+            $idadeHumana = round($idadeEmAnos);
         }
 
-        $idadeStr = $idade ? "{$idadeHumana}-year-old human" : "young adult human";
+        $genero = ($sexo === 'fêmea' || $sexo === 'femea' || $sexo === 'female') ? 'woman' : 'man';
+        $idadeTexto = $idadeHumana > 0 ? "{$idadeHumana}-year-old {$genero}" : "young adult {$genero}";
 
         $animalEn = ($especie == 'gato' || $especie == 'gata') ? 'cat' : 'dog';
         $srdLabels = ['srd', 'sem raça definida', 'vira-lata', '', null];
@@ -31,13 +32,12 @@ class PromptGeneratorService
             ? "mixed breed $animalEn"
             : ($this->racasIngles[$raca] ?? ucfirst($raca));
 
-        // PROMPT APRIMORADO: Enfatiza características humanas com sutis influências da raça
-        return "A hyper-realistic portrait of a {$idadeStr} with subtle hints of a {$racaEn}'s features, transformed into a human. DSLR quality, detailed human face, clear eyes, smooth human skin, confident expression, cinematic lighting, symmetrical human facial features, natural background";
+        // PROMPT FINAL: 100% focado em humano realista, inspirado na sua referência
+        return "A hyper-realistic portrait of a {$idadeTexto} inspired by an {$racaEn} dog: muscular build, shaved head, deep-set eyes, silver-gray hoodie, short beard, confident expression, steel gray eyes, smooth skin, urban streetwear style, symmetrical lighting, DSLR quality, cinematic background";
     }
 
     public function generateNegativePrompt(): string
     {
-        // PROMPT NEGATIVO EXPANDIDO: Suprime características animais e artefatos
         return implode(', ', [
             "deformed",
             "mutated",
