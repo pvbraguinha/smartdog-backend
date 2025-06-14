@@ -22,7 +22,6 @@ class PetTransformationService
         $this->imageCompositionService = $imageCompositionService;
     }
 
-    // Agora aceita especie, breed, sex, age
     public function transformPet($petImages, $userSession, $especie, $manualBreed, $sex = null, $age = null)
     {
         try {
@@ -35,8 +34,8 @@ class PetTransformationService
 
             Log::info("Espécie fornecida pelo usuário: {$especie}, Raça: {$manualBreed}");
 
-            // Prompt dinâmico!
             $prompt = $this->promptGenerator->generate($especie, $manualBreed, $sex, $age);
+            $negativePrompt = $this->promptGenerator->generateNegativePrompt();
 
             Log::info("Prompt gerado", ["prompt" => $prompt]);
 
@@ -48,13 +47,12 @@ class PetTransformationService
                 throw new \Exception("Nenhuma imagem frontal foi enviada para a transformação.");
             }
 
-            $replicateResult = $this->replicate->transformPetToHuman($controlImageUrl, $prompt);
+            $replicateResult = $this->replicate->transformPetToHuman($controlImageUrl, $prompt, $negativePrompt);
 
             if (!$replicateResult["success"]) {
                 throw new \Exception("Falha na transformação: " . $replicateResult["error"]);
             }
 
-            // Salva tudo junto no histórico!
             $this->updateTransformationHistory($userSession, $manualBreed, $replicateResult, $sex, $age);
 
             $compositeImageUrl = $this->createSideBySideComposition(

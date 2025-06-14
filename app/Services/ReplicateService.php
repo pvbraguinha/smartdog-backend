@@ -16,7 +16,7 @@ class ReplicateService
         $this->modelVersion = config('services.replicate.version');
     }
 
-    public function generateImage(string $imageUrl, string $prompt): ?string
+    public function generateImage(string $imageUrl, string $prompt, string $negativePrompt = ''): ?string
     {
         $seed = rand(1000, 999999);
 
@@ -30,6 +30,7 @@ class ReplicateService
             'input' => [
                 'image' => $imageUrl,
                 'prompt' => $prompt,
+                'negative_prompt' => $negativePrompt,
                 'img2img' => true,
                 'condition_scale' => 0.5,
                 'strength' => 0.8,
@@ -87,12 +88,12 @@ class ReplicateService
         return null;
     }
 
-    public function transformPetToHuman(string $imageUrl, string $prompt): array
+    public function transformPetToHuman(string $imageUrl, string $prompt, string $negativePrompt = ''): array
     {
         try {
             $start = microtime(true);
 
-            $resultUrl = $this->generateImage($imageUrl, $prompt);
+            $resultUrl = $this->generateImage($imageUrl, $prompt, $negativePrompt);
 
             if (!$resultUrl) {
                 return [
@@ -119,4 +120,3 @@ class ReplicateService
         }
     }
 }
-
