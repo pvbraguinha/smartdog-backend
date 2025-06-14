@@ -5,7 +5,7 @@ namespace App\Services;
 class PromptGeneratorService
 {
     private $racasIngles = [
-        // ... sua lista
+        // ... sua lista de raças (mantenha como está)
     ];
 
     public function generate($especie, $raca, $sexo = null, $idade = null): string
@@ -23,7 +23,7 @@ class PromptGeneratorService
             $idadeHumana = round($idadeEmAnos * 6);
         }
 
-        $idadeStr = $idade ? "{$idadeHumana}-year-old human" : "young adult";
+        $idadeStr = $idade ? "{$idadeHumana}-year-old human" : "young adult human";
 
         $animalEn = ($especie == 'gato' || $especie == 'gata') ? 'cat' : 'dog';
         $srdLabels = ['srd', 'sem raça definida', 'vira-lata', '', null];
@@ -31,11 +31,13 @@ class PromptGeneratorService
             ? "mixed breed $animalEn"
             : ($this->racasIngles[$raca] ?? ucfirst($raca));
 
-        return "A hyper-realistic portrait of a {$idadeStr} inspired by a {$racaEn}: DSLR quality, detailed face, smooth skin, confident expression, cinematic lighting, symmetrical features, natural background, urban style";
+        // PROMPT APRIMORADO: Enfatiza características humanas com sutis influências da raça
+        return "A hyper-realistic portrait of a {$idadeStr} with subtle hints of a {$racaEn}'s features, transformed into a human. DSLR quality, detailed human face, clear eyes, smooth human skin, confident expression, cinematic lighting, symmetrical human facial features, natural background";
     }
 
     public function generateNegativePrompt(): string
     {
+        // PROMPT NEGATIVO EXPANDIDO: Suprime características animais e artefatos
         return implode(', ', [
             "deformed",
             "mutated",
@@ -51,10 +53,39 @@ class PromptGeneratorService
             "cartoonish",
             "surreal",
             "animal face",
+            "animal ears",
+            "snout",
+            "muzzle",
+            "whiskers",
+            "paws",
+            "tail",
             "fur",
-            "furry",
+            "furry texture",
+            "animal body",
+            "dog face",
+            "cat face",
             "dog snout",
-            "animal nose"
+            "cat snout",
+            "animal nose",
+            "animal eyes",
+            "non-human eyes",
+            "pet collar",
+            "leash",
+            "animal clothing",
+            "objects on head",
+            "text",
+            "watermark",
+            "signature",
+            "logo",
+            "painting",
+            "drawing",
+            "sketch",
+            "illustration",
+            "anime",
+            "manga",
+            "childish",
+            "crying",
+            "sad expression"
         ]);
     }
 
@@ -83,7 +114,7 @@ class PromptGeneratorService
             return isset($matches[1]) ? floatval($matches[1]) / 365 : 0;
         }
 
-        if (str_contains($idade, 'mes')) {
+        if (str_contains($idade, 'mes') || str_contains($idade, 'mês')) {
             preg_match('/(\d+)/', $idade, $matches);
             return isset($matches[1]) ? floatval($matches[1]) / 12 : 0;
         }
@@ -96,4 +127,3 @@ class PromptGeneratorService
         return is_numeric($idade) ? floatval($idade) : 0;
     }
 }
-

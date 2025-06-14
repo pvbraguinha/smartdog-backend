@@ -38,7 +38,8 @@ class ReplicateService
                 'guidance_scale' => 7.5,
                 'scheduler' => 'K_EULER',
                 'apply_watermark' => false,
-                'strength' => 0.8,
+                // STRENGTH APRIMORADO: Reduzido de 0.8 para 0.6 para permitir mais transformação
+                'strength' => 0.6,
                 'num_outputs' => 1,
                 'num_inference_steps' => 40,
                 'seed' => $seed,
