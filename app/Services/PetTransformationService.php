@@ -127,4 +127,3 @@ class PetTransformationService
         return $result["success"] ? $result["composition_url"] : $transformedUrl;
     }
 }
-
