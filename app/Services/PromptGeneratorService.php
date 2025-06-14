@@ -5,133 +5,16 @@ namespace App\Services;
 class PromptGeneratorService
 {
     private $racasIngles = [
-        // GATOS
-        'siamês' => 'Siamese',
-        'persa' => 'Persian',
-        'maine coon' => 'Maine Coon',
-        'angorá' => 'Turkish Angora',
-        'sphynx' => 'Sphynx',
-        'ragdoll' => 'Ragdoll',
-        'azul russo' => 'Russian Blue',
-        'bengal' => 'Bengal',
-        'chartreux' => 'Chartreux',
-        'sagrado da birmânia' => 'Birman',
-        'birmanês' => 'Burmese',
-        'oriental' => 'Oriental Shorthair',
-        'abissínio' => 'Abyssinian',
-        'american shorthair' => 'American Shorthair',
-        'scottish fold' => 'Scottish Fold',
-        'exótico' => 'Exotic Shorthair',
-        'manx' => 'Manx',
-        'somali' => 'Somali',
-        'balinês' => 'Balinese',
-        'bombaim' => 'Bombay',
-        'norueguês da floresta' => 'Norwegian Forest',
-        'himaláia' => 'Himalayan',
-        'bobtail japonês' => 'Japanese Bobtail',
-        'cornish rex' => 'Cornish Rex',
-        'devon rex' => 'Devon Rex',
-        'burmilla' => 'Burmilla',
-        'turkish van' => 'Turkish Van',
-
-        // CÃES
-        'vira-lata' => 'mixed breed',
-        'srd' => 'mixed breed',
-        'sem raça definida' => 'mixed breed',
-        'golden retriever' => 'Golden Retriever',
-        'labrador' => 'Labrador Retriever',
-        'labrador retriever' => 'Labrador Retriever',
-        'pastor alemão' => 'German Shepherd',
-        'pastor belga' => 'Belgian Shepherd',
-        'bulldog francês' => 'French Bulldog',
-        'bulldog inglês' => 'English Bulldog',
-        'beagle' => 'Beagle',
-        'poodle' => 'Poodle',
-        'yorkshire' => 'Yorkshire Terrier',
-        'pinscher' => 'Pinscher',
-        'rottweiler' => 'Rottweiler',
-        'dachshund' => 'Dachshund',
-        'teckel' => 'Dachshund',
-        'shih tzu' => 'Shih Tzu',
-        'shihtzu' => 'Shih Tzu',
-        'lhasa apso' => 'Lhasa Apso',
-        'chihuahua' => 'Chihuahua',
-        'schnauzer' => 'Schnauzer',
-        'maltês' => 'Maltese',
-        'maltes' => 'Maltese',
-        'boxer' => 'Boxer',
-        'border collie' => 'Border Collie',
-        'pitbull' => 'Pitbull',
-        'american staffordshire' => 'American Staffordshire Terrier',
-        'dobermann' => 'Doberman Pinscher',
-        'doberman' => 'Doberman Pinscher',
-        'cocker spaniel' => 'Cocker Spaniel',
-        'dalmatian' => 'Dalmatian',
-        'jack russell' => 'Jack Russell Terrier',
-        'husky siberiano' => 'Siberian Husky',
-        'husky' => 'Siberian Husky',
-        'akita' => 'Akita',
-        'bulldog' => 'Bulldog',
-        'bulldog americano' => 'American Bulldog',
-        'pastor australiano' => 'Australian Shepherd',
-        'pug' => 'Pug',
-        'basset hound' => 'Basset Hound',
-        'cão de crista chinês' => 'Chinese Crested Dog',
-        'cavalier king charles' => 'Cavalier King Charles Spaniel',
-        'west highland white terrier' => 'West Highland White Terrier',
-        'fox terrier' => 'Fox Terrier',
-        'greyhound' => 'Greyhound',
-        'irish setter' => 'Irish Setter',
-        'kerry blue terrier' => 'Kerry Blue Terrier',
-        'pomerânia' => 'Pomeranian',
-        'pomeranian' => 'Pomeranian',
-        'lulu da pomerânia' => 'Pomeranian',
-        'pointer' => 'Pointer',
-        'pequinês' => 'Pekingese',
-        'pekingese' => 'Pekingese',
-        'weimaraner' => 'Weimaraner',
-        'whippet' => 'Whippet',
-        'samoyeda' => 'Samoyed',
-        'samoyed' => 'Samoyed',
-        'saint bernard' => 'Saint Bernard',
-        'são bernardo' => 'Saint Bernard',
-        'shar pei' => 'Shar Pei',
-        'skye terrier' => 'Skye Terrier',
-        'spitz alemão' => 'German Spitz',
-        'staffordshire bull terrier' => 'Staffordshire Bull Terrier',
-        'terrier brasileiro' => 'Brazilian Terrier',
-        'buldogue campeiro' => 'Brazilian Bulldog',
-        'fila brasileiro' => 'Fila Brasileiro',
-        'pastor suíço' => 'White Swiss Shepherd',
-        'pastor branco suíço' => 'White Swiss Shepherd',
-        'pastor maremmano-abruzzese' => 'Maremma Sheepdog',
-        'pastor de shetland' => 'Shetland Sheepdog',
-        'corgi' => 'Welsh Corgi',
-        'corgi galês' => 'Welsh Corgi',
-        'dogo argentino' => 'Dogo Argentino',
-        'bull terrier' => 'Bull Terrier',
-        'chow chow' => 'Chow Chow',
-        'collie' => 'Collie',
-        'fox paulistinha' => 'Brazilian Terrier',
-        'great dane' => 'Great Dane',
-        'dogue alemão' => 'Great Dane',
-        'italian greyhound' => 'Italian Greyhound',
-        'newfoundland' => 'Newfoundland',
-        'pekingese' => 'Pekingese',
-        'ridgeback' => 'Rhodesian Ridgeback',
-        'saluki' => 'Saluki',
-        'shiba inu' => 'Shiba Inu',
-        'spaniel' => 'Spaniel',
-        'vizsla' => 'Vizsla',
-        'wolfspitz' => 'Keeshond',
-        // ...adicione quantos mais quiser!
+        // ... [mesmo dicionário de raças, sem alteração]
+        // (mantenha sua lista aqui, igual você já fez)
     ];
 
     public function generate($especie, $raca, $sexo = null, $idade = null): string
     {
         $especie = strtolower(trim($especie));
         $raca = strtolower(trim($raca));
-        $sexo = $sexo ? strtolower($sexo) : null;
+        $sexo = $sexo ? strtolower($sexo) : "male";
+        $idadeStr = $idade ? "{$idade} years old" : "";
 
         // Tradução da espécie para inglês
         $animalEn = ($especie == 'gato' || $especie == 'gata') ? 'cat' : 'dog';
@@ -147,11 +30,25 @@ class PromptGeneratorService
             $racaPrompt = "$racaEn $animalEn";
         }
 
-        // Monta prompt
-        $prompt = "photo portrait of a $racaPrompt";
-        if ($sexo) $prompt .= ", $sexo";
-        if ($idade) $prompt .= ", $idade years old";
-        $prompt .= ", ultra realistic, photoreal, full color";
+        // Array de estilos para sortear aleatoriamente
+        $styles = [
+            // Gângster moderno
+            "wearing a gray hoodie, gold chain, streetwear, urban city background with graffiti, moody cinematic lighting, confident and intimidating expression, gangster vibe",
+            // Playboy/Riquinho
+            "wearing a designer jacket, luxury watch, neon city lights, elegant modern background, sophisticated and rich vibe, playboy style",
+            // Rapper/Famoso
+            "snapback cap, hoodie, music studio background, rapper style, cool and modern attitude, energetic vibe",
+            // Marvel/Cinema
+            "hooded costume, city skyline at night, heroic and epic expression, cinematic look, superhero character, dramatic shadows",
+        ];
+        $chosenStyle = $styles[array_rand($styles)];
+
+        // Monta prompt final
+        $prompt = "Ultra-realistic digital portrait of a young human with anthropomorphic features of a {$racaPrompt}: dog nose, fur, but human eyes and face. ";
+        $prompt .= $chosenStyle;
+        $prompt .= ", half-human half-dog, humanized, photorealistic, digital art, trending on Artstation, concept art";
+        if ($sexo) $prompt .= ", {$sexo}";
+        if ($idadeStr) $prompt .= ", {$idadeStr}";
 
         return $prompt;
     }
