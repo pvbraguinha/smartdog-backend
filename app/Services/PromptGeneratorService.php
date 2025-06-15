@@ -5,7 +5,7 @@ namespace App\Services;
 class PromptGeneratorService
 {
     private $racasIngles = [
-        // ... sua lista de raças (mantenha como está)
+        // ... sua lista de raças
     ];
 
     public function generate($especie, $raca, $sexo = null, $idade = null): string
@@ -24,7 +24,6 @@ class PromptGeneratorService
         }
 
         $genero = ($sexo === 'fêmea' || $sexo === 'femea' || $sexo === 'female') ? 'female' : 'male';
-        $generoTexto = ($genero === 'female') ? 'woman' : 'man';
 
         $racaEn = $this->racasIngles[$raca] ?? ucfirst($raca ?: 'dog');
 
@@ -33,12 +32,8 @@ class PromptGeneratorService
 
     public function generateNegativePrompt(): string
     {
-        return implode(', ', [
-            "cartoon", "anime", "manga", "sketch", "drawing", "illustration",
-            "childish", "painting", "text", "watermark", "signature", "logo",
-            "extra limbs", "bad anatomy", "surreal", "objects on head",
-            "pet collar", "leash", "animal clothing"
-        ]);
+        // Nenhum negative prompt será usado para DALL·E
+        return '';
     }
 
     public function calcularIdadeHumana(string $especie, string $idade): int
