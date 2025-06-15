@@ -27,7 +27,7 @@ class PromptGeneratorService
 
         $racaEn = $this->racasIngles[$raca] ?? ucfirst($raca ?: 'dog');
 
-        return "A hyper-realistic portrait of a {$idadeHumana}-year-old {$genero} inspired by a {$racaEn} dog, with subtle canine facial features such as nose and fur texture integrated into a human face. She is wearing a stylish outfit inspired by rapper style, confident expression, symmetrical lighting, DSLR quality, cinematic background.";
+        return "A hyper-realistic portrait of a 30-year-old female inspired by a white-furred Husky dog, with subtle canine facial features such as nose and fur texture integrated into a human face. She is wearing a stylish outfit inspired by rapper style, confident expression, symmetrical lighting, DSLR quality, cinematic background.;
     }
 
     public function generateNegativePrompt(): string
