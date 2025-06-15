@@ -4,7 +4,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Services\PromptGeneratorService;
+use App\Services\PromptBuilderService;
 use App\Services\DalleService;
 use App\Services\ImageCompositionService;
 use App\Services\AdvancedCompositionService;
@@ -17,14 +17,14 @@ class PetTransformationServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(PromptGeneratorService::class);
+        $this->app->singleton(PromptBuilderService::class);
         $this->app->singleton(DalleService::class);
         $this->app->singleton(ImageCompositionService::class);
         $this->app->singleton(AdvancedCompositionService::class);
 
         $this->app->singleton(PetTransformationService::class, function ($app) {
             return new PetTransformationService(
-                $app->make(PromptGeneratorService::class),
+                $app->make(PromptBuilderService::class),
                 $app->make(DalleService::class),
                 $app->make(ImageCompositionService::class)
             );
@@ -39,3 +39,4 @@ class PetTransformationServiceProvider extends ServiceProvider
         // Nenhuma ação necessária no boot por enquanto
     }
 }
+
