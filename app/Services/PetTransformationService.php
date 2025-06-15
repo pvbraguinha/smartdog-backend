@@ -43,7 +43,7 @@ class PetTransformationService
                 pelagem: $pelagem
             );
 
-            Log::info("Prompt final enviado para DALL·E", ["prompt" => $prompt]);
+            Log::info("PROMPT FINAL USADO:", ['prompt' => $prompt]);
 
             $dalleImageUrl = $this->dalle->gerarImagemComPrompt($prompt);
             $controlImageUrl = $this->getControlImageUrl($petImages);
