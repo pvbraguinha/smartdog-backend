@@ -25,42 +25,19 @@ class PromptGeneratorService
 
         $genero = ($sexo === 'fêmea' || $sexo === 'femea' || $sexo === 'female') ? 'female' : 'male';
         $generoTexto = ($genero === 'female') ? 'woman' : 'man';
-        $idadeTexto = $idadeHumana > 0 ? "{$idadeHumana}-year-old {$genero}" : "young adult {$genero}";
 
-        $animalEn = ($especie == 'gato' || $especie == 'gata') ? 'cat' : 'dog';
-        $srdLabels = ['srd', 'sem raça definida', 'vira-lata', '', null];
-        $racaEn = in_array($raca, $srdLabels, true)
-            ? "mixed breed $animalEn"
-            : ($this->racasIngles[$raca] ?? ucfirst($raca));
+        $racaEn = $this->racasIngles[$raca] ?? ucfirst($raca ?: 'dog');
 
-        // 🎲 Estilos aleatórios
-        $estilos = [
-            'rapper style',
-            'cyberpunk outfit',
-            'medieval knight armor',
-            'anime-inspired clothing',
-            'veterinarian uniform',
-            'dentist scrubs',
-            'soccer player uniform',
-            'military soldier gear',
-            'luxury fashion model look',
-            'streetwear with urban vibe'
-        ];
-        $estiloEscolhido = $estilos[array_rand($estilos)];
-
-        return "A hyper-realistic portrait of a {$idadeTexto} inspired by a {$racaEn} {$animalEn}, with subtle {$animalEn}-like facial features such as nose shape and fur texture integrated into a human face. The {$generoTexto} is wearing a stylish outfit inspired by {$estiloEscolhido}, with confident expression, symmetrical face, expressive eyes, DSLR quality, and cinematic lighting.";
+        return "A hyper-realistic portrait of a {$idadeHumana}-year-old {$genero} inspired by a {$racaEn} dog, with subtle canine facial features such as nose and fur texture integrated into a human face. She is wearing a stylish outfit inspired by rapper style, confident expression, symmetrical lighting, DSLR quality, cinematic background.";
     }
 
     public function generateNegativePrompt(): string
     {
         return implode(', ', [
-            "deformed", "mutated", "ugly", "extra limbs", "low quality", "blurry", "bad anatomy",
-            "poorly drawn face", "asymmetry", "disfigured", "distorted", "cartoonish", "surreal",
-            "animal face", "animal ears", "snout", "muzzle", "whiskers", "paws", "tail", "fur",
-            "furry texture", "animal body", "dog face", "cat face", "dog snout", "cat snout",
-            "animal nose", "animal eyes", "non-human eyes", "pet collar", "leash", "animal clothing",
-            "objects on head", "text", "watermark", "signature", "logo", "painting", "drawing",
-            "sketch", "illustration", "anime", "manga", "childish", "crying", "sad expression"
+            "cartoon", "anime", "manga", "sketch", "drawing", "illustration",
+            "childish", "painting", "text", "watermark", "signature", "logo",
+            "extra limbs", "bad anatomy", "surreal", "objects on head",
+            "pet collar", "leash", "animal clothing"
         ]);
     }
 
