@@ -24,16 +24,15 @@ class PromptGeneratorService
         }
 
         $genero = ($sexo === 'fêmea' || $sexo === 'femea' || $sexo === 'female') ? 'female' : 'male';
-
+        $pronome = ($genero === 'female') ? 'She' : 'He';
         $racaEn = $this->racasIngles[$raca] ?? ucfirst($raca ?: 'dog');
 
-        return "A hyper-realistic portrait of a 30-year-old female inspired by a white-furred Husky dog, with subtle canine facial features such as nose and fur texture integrated into a human face. She is wearing a stylish outfit inspired by rapper style, confident expression, symmetrical lighting, DSLR quality, cinematic background.;
+        return "A hyper-realistic portrait of a {$idadeHumana}-year-old {$genero} inspired by a white-furred {$racaEn} dog, with subtle canine facial features such as nose and fur texture integrated into a human face. {$pronome} is wearing a stylish outfit inspired by rapper style, confident expression, symmetrical lighting, DSLR quality, cinematic background.";
     }
 
     public function generateNegativePrompt(): string
     {
-        // Nenhum negative prompt será usado para DALL·E
-        return '';
+        return ''; // DALL·E não usa negative prompt
     }
 
     public function calcularIdadeHumana(string $especie, string $idade): int
