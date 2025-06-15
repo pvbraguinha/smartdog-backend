@@ -23,7 +23,8 @@ class PromptGeneratorService
             $idadeHumana = round($idadeEmAnos);
         }
 
-        $genero = ($sexo === 'fêmea' || $sexo === 'femea' || $sexo === 'female') ? 'woman' : 'man';
+        $genero = ($sexo === 'fêmea' || $sexo === 'femea' || $sexo === 'female') ? 'female' : 'male';
+        $generoTexto = ($genero === 'female') ? 'woman' : 'man';
         $idadeTexto = $idadeHumana > 0 ? "{$idadeHumana}-year-old {$genero}" : "young adult {$genero}";
 
         $animalEn = ($especie == 'gato' || $especie == 'gata') ? 'cat' : 'dog';
@@ -32,75 +33,34 @@ class PromptGeneratorService
             ? "mixed breed $animalEn"
             : ($this->racasIngles[$raca] ?? ucfirst($raca));
 
-        // 🎲 Lista de estilos aleatórios
+        // 🎲 Estilos aleatórios
         $estilos = [
-            'cyberpunk outfit with neon lights',
+            'rapper style',
+            'cyberpunk outfit',
             'medieval knight armor',
-            'anime style with colorful hair',
-            'veterinarian uniform with stethoscope',
-            'dentist outfit in a clinical setting',
-            'futuristic space suit',
-            'soccer player uniform in a stadium',
-            'military soldier gear in a battlefield',
-            'luxury fashion model with sunglasses',
-            'casual streetwear with graffiti background'
+            'anime-inspired clothing',
+            'veterinarian uniform',
+            'dentist scrubs',
+            'soccer player uniform',
+            'military soldier gear',
+            'luxury fashion model look',
+            'streetwear with urban vibe'
         ];
-
         $estiloEscolhido = $estilos[array_rand($estilos)];
 
-        return "A hyper-realistic portrait of a {$idadeTexto} {$genero}, with human features inspired by the personality and essence of a {$racaEn} {$animalEn}. The person has smooth skin, symmetrical facial features, expressive eyes, and is wearing a {$estiloEscolhido}. DSLR quality, cinematic lighting.";
+        return "A hyper-realistic portrait of a {$idadeTexto} inspired by a {$racaEn} {$animalEn}, with subtle {$animalEn}-like facial features such as nose shape and fur texture integrated into a human face. The {$generoTexto} is wearing a stylish outfit inspired by {$estiloEscolhido}, with confident expression, symmetrical face, expressive eyes, DSLR quality, and cinematic lighting.";
     }
 
     public function generateNegativePrompt(): string
     {
         return implode(', ', [
-            "deformed",
-            "mutated",
-            "ugly",
-            "extra limbs",
-            "low quality",
-            "blurry",
-            "bad anatomy",
-            "poorly drawn face",
-            "asymmetry",
-            "disfigured",
-            "distorted",
-            "cartoonish",
-            "surreal",
-            "animal face",
-            "animal ears",
-            "snout",
-            "muzzle",
-            "whiskers",
-            "paws",
-            "tail",
-            "fur",
-            "furry texture",
-            "animal body",
-            "dog face",
-            "cat face",
-            "dog snout",
-            "cat snout",
-            "animal nose",
-            "animal eyes",
-            "non-human eyes",
-            "pet collar",
-            "leash",
-            "animal clothing",
-            "objects on head",
-            "text",
-            "watermark",
-            "signature",
-            "logo",
-            "painting",
-            "drawing",
-            "sketch",
-            "illustration",
-            "anime",
-            "manga",
-            "childish",
-            "crying",
-            "sad expression"
+            "deformed", "mutated", "ugly", "extra limbs", "low quality", "blurry", "bad anatomy",
+            "poorly drawn face", "asymmetry", "disfigured", "distorted", "cartoonish", "surreal",
+            "animal face", "animal ears", "snout", "muzzle", "whiskers", "paws", "tail", "fur",
+            "furry texture", "animal body", "dog face", "cat face", "dog snout", "cat snout",
+            "animal nose", "animal eyes", "non-human eyes", "pet collar", "leash", "animal clothing",
+            "objects on head", "text", "watermark", "signature", "logo", "painting", "drawing",
+            "sketch", "illustration", "anime", "manga", "childish", "crying", "sad expression"
         ]);
     }
 
