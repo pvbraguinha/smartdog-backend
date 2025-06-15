@@ -32,9 +32,23 @@ class PromptGeneratorService
             ? "mixed breed $animalEn"
             : ($this->racasIngles[$raca] ?? ucfirst($raca));
 
-        // PROMPT FINAL: 100% focado em humano realista, inspirado na sua referência
-        return "A hyper-realistic portrait of a {$idadeTexto} {$genero}, with human features inspired by the personality and essence of a {$racaEn} dog. The person has a confident expression, muscular build, shaved head, deep-set eyes, silver-gray hoodie, short beard, smooth skin, symmetrical facial structure, and stylish urban streetwear. DSLR quality, cinematic background, expressive eyes.";
+        // 🎲 Lista de estilos aleatórios
+        $estilos = [
+            'cyberpunk outfit with neon lights',
+            'medieval knight armor',
+            'anime style with colorful hair',
+            'veterinarian uniform with stethoscope',
+            'dentist outfit in a clinical setting',
+            'futuristic space suit',
+            'soccer player uniform in a stadium',
+            'military soldier gear in a battlefield',
+            'luxury fashion model with sunglasses',
+            'casual streetwear with graffiti background'
+        ];
 
+        $estiloEscolhido = $estilos[array_rand($estilos)];
+
+        return "A hyper-realistic portrait of a {$idadeTexto} {$genero}, with human features inspired by the personality and essence of a {$racaEn} {$animalEn}. The person has smooth skin, symmetrical facial features, expressive eyes, and is wearing a {$estiloEscolhido}. DSLR quality, cinematic lighting.";
     }
 
     public function generateNegativePrompt(): string
