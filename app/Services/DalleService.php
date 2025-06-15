@@ -4,46 +4,38 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 
 class DalleService
 {
-    public function gerarImagem(string $prompt): string
+    public function gerarImagemComPrompt(string $prompt): string
     {
-        $apiKey = env("OPENAI_API_KEY");
+        try {
+            $response = Http::withToken(env('OPENAI_API_KEY'))
+                ->timeout(40)
+                ->post('https://api.openai.com/v1/images/generations', [
+                    'prompt' => $prompt,
+                    'n' => 1,
+                    'size' => '512x512',
+                    'response_format' => 'b64_json'
+                ]);
 
-        $response = Http::withToken($apiKey)
-            ->post("https://api.openai.com/v1/images/generations", [
-                "model" => "dall-e-3",
-                "prompt" => $prompt,
-                "n" => 1,
-                "size" => "1024x1024",
-                "response_format" => "url",
-            ]);
-
-        if ($response->successful()) {
-            $dalleImageUrl = $response->json("data.0.url");
-
-            if (!$dalleImageUrl) {
-                throw new \Exception("DALL-E não retornou uma URL de imagem.");
+            if ($response->failed()) {
+                throw new \Exception('Erro ao chamar API do DALL·E: ' . $response->body());
             }
 
-            // Baixar a imagem do DALL-E
-            $imageContents = file_get_contents($dalleImageUrl);
-            if ($imageContents === false) {
-                throw new \Exception("Não foi possível baixar a imagem do DALL-E.");
-            }
+            $imageBase64 = $response->json('data.0.b64_json');
 
-            // Salvar a imagem no S3
-            $filename = "uploads/meupethumano/dalle_results/" . uniqid() . ".jpg";
-            Storage::disk("s3")->put($filename, $imageContents, "public");
+            // Salvar imagem no S3
+            $filename = 'dalle_outputs/' . now()->format('Ymd_His') . '_' . Str::random(10) . '.png';
+            Storage::disk('s3')->put($filename, base64_decode($imageBase64), 'public');
 
-            Log::info("Imagem DALL-E salva no S3: " . Storage::disk("s3")->url($filename));
+            return Storage::disk('s3')->url($filename);
 
-            return Storage::disk("s3")->url($filename);
+        } catch (\Exception $e) {
+            Log::error("Erro no DalleService: " . $e->getMessage());
+            throw $e;
         }
-
-        Log::error("Erro ao gerar imagem com DALL-E: " . $response->body());
-        throw new \Exception("Erro ao gerar imagem: " . $response->body());
     }
 }

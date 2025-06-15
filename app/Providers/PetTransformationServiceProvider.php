@@ -22,13 +22,13 @@ class PetTransformationServiceProvider extends ServiceProvider
         $this->app->singleton(ImageCompositionService::class);
         $this->app->singleton(AdvancedCompositionService::class);
 
-        $this->app->singleton(PetTransformationService::class, function ($app) {
-            return new PetTransformationService(
-                $app->make(PromptGeneratorService::class),
-                $app->make(ReplicateService::class),
-                $app->make(ImageCompositionService::class) // Injetando o serviço de composição
-            );
-        });
+       $this->app->singleton(PetTransformationService::class, function ($app) {
+    return new PetTransformationService(
+        $app->make(PromptGeneratorService::class),
+        $app->make(DalleService::class),
+        $app->make(ImageCompositionService::class)
+    );
+});
     }
 
     /**
@@ -39,3 +39,6 @@ class PetTransformationServiceProvider extends ServiceProvider
         // Nenhuma ação necessária no boot por enquanto
     }
 }
+
+
+
