@@ -8,21 +8,21 @@ use Illuminate\Support\Facades\Log;
 
 class PetTransformationService
 {
-    private $promptGenerator;
+    private $promptBuilder;
     private $dalle;
     private $imageCompositionService;
 
     public function __construct(
-        PromptGeneratorService $promptGenerator,
+        PromptBuilderService $promptBuilder,
         DalleService $dalle,
         ImageCompositionService $imageCompositionService
     ) {
-        $this->promptGenerator = $promptGenerator;
+        $this->promptBuilder = $promptBuilder;
         $this->dalle = $dalle;
         $this->imageCompositionService = $imageCompositionService;
     }
 
-    public function transformPet($petImages, $userSession, $especie, $manualBreed, $sex = null, $age = null)
+    public function transformPet($petImages, $userSession, $especie, $manualBreed, $sex = null, $age = null, $pelagem = null)
     {
         try {
             if (empty($especie) || empty($manualBreed)) {
@@ -32,27 +32,28 @@ class PetTransformationService
                 throw new \Exception("Sexo e idade do pet são obrigatórios.");
             }
 
-            Log::info("Espécie fornecida: {$especie}, Raça: {$manualBreed}");
+            Log::info("Transformação solicitada: {$especie}, {$manualBreed}, {$sex}, {$age}, pelagem: {$pelagem}");
 
-            $idadeHumana = $this->promptGenerator->calcularIdadeHumana($especie, $age);
-            $prompt = $this->promptGenerator->generate($especie, $manualBreed, $sex, $age);
+            $idadeHumana = $this->promptBuilder->calcularIdadeHumana($especie, $age);
+            $prompt = $this->promptBuilder->gerarPrompt(
+                idade: $idadeHumana,
+                sexo: $sex,
+                raca: $manualBreed,
+                especie: $especie,
+                pelagem: $pelagem
+            );
 
-            Log::info("Prompt gerado para DALL·E", ["prompt" => $prompt]);
+            Log::info("Prompt final enviado para DALL·E", ["prompt" => $prompt]);
 
-            // Gerar imagem com DALL·E
             $dalleImageUrl = $this->dalle->gerarImagemComPrompt($prompt);
-
-            // Obter imagem frontal do pet
             $controlImageUrl = $this->getControlImageUrl($petImages);
 
-            // Compor lado a lado (original + humano)
             $compositeImageUrl = $this->createSideBySideComposition(
                 $controlImageUrl,
                 $dalleImageUrl,
                 $userSession
             );
 
-            // Atualiza histórico no banco
             $this->updateTransformationHistory($userSession, $manualBreed, $dalleImageUrl, $sex, $age);
 
             return [
