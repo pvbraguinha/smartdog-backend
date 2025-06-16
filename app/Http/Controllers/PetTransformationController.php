@@ -3,24 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Services\PetTransformationService;
 use Illuminate\Support\Facades\Storage;
 
 class PetTransformationController extends Controller
 {
-    protected $transformationService;
-
-    public function __construct(PetTransformationService $transformationService)
-    {
-        $this->transformationService = $transformationService;
-    }
-
     public function transform(Request $request)
     {
         $request->validate([
             'frontal' => 'required|image',
             'focinho' => 'nullable|image',
-            'angulo'  => 'nullable|image',
             'breed'   => 'required|string',
             'session' => 'required|string',
         ]);
@@ -28,9 +19,8 @@ class PetTransformationController extends Controller
         $petImages = [];
 
         $allowedTypes = [
-            'frontal' => 'frontal',   // corrigido aqui
+            'frontal' => 'frontal',
             'focinho' => 'focinho',
-            'angulo'  => 'angulo',
         ];
 
         foreach ($allowedTypes as $field => $folder) {
@@ -41,12 +31,10 @@ class PetTransformationController extends Controller
             }
         }
 
-        $result = $this->transformationService->transformPet(
-            $petImages,
-            $request->input('session'),
-            $request->input('breed')
-        );
-
-        return response()->json($result);
+        return response()->json([
+            'success' => true,
+            'message' => 'Contribuição recebida com sucesso.',
+            'uploaded_images' => $petImages,
+        ]);
     }
 }
