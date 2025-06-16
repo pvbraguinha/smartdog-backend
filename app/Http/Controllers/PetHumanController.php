@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Services\PetTransformationService;
 
 class PetHumanController extends Controller
@@ -22,39 +23,46 @@ class PetHumanController extends Controller
             $arquivos = $request->allFiles();
             $session = $request->input('session');
             $breed = $request->input('breed');
+            $petName = Str::slug($request->input('name', 'pet')); // usa 'pet' como fallback
+            $date = now()->format('Y-m-d');
 
             Log::info('🧪 Arquivos recebidos:', array_keys($arquivos));
 
             $pastas = [
-                'focinho' => 'focinho',
-                'frontal' => 'frontal',
-                'angulo'  => 'angulo',
+                'focinho' => 'focinhos',
+                'frontal' => 'frontais',
+                'angulo'  => 'angulos',
             ];
 
             $paths = [];
             $urls = [];
             $errors = [];
 
-            // Salva todas as imagens enviadas no S3
             foreach ($pastas as $tipo => $pasta) {
                 if (!isset($arquivos[$tipo])) {
                     continue;
                 }
 
                 $file = $arquivos[$tipo];
+
                 if (!$file->isValid()) {
                     $errors[$tipo] = 'Arquivo inválido.';
                     continue;
                 }
 
-                $diretorio = "uploads/meupethumano/{$pasta}";
-                $path = Storage::disk('s3')->putFile($diretorio, $file);
-                $paths[$tipo] = $path;
-                $urls[$tipo] = Storage::disk('s3')->url($path);
-                Log::info("✔️ {$tipo} salvo em: {$path}");
+                $ext = $file->getClientOriginalExtension();
+                $random = Str::random(6);
+                $filename = "{$petName}_{$tipo}_{$date}_{$random}.{$ext}";
+                $diretorio = "uploads/meupethumano/{$pasta}/{$filename}";
+
+                Storage::disk('s3')->put($diretorio, file_get_contents($file), 'public');
+
+                $paths[$tipo] = $diretorio;
+                $urls[$tipo] = Storage::disk('s3')->url($diretorio);
+
+                Log::info("✔️ {$tipo} salvo em: {$diretorio}");
             }
 
-            // "frontal" é obrigatória para processar no Replicate
             if (empty($urls['frontal'])) {
                 return response()->json([
                     'success' => false,
@@ -62,15 +70,11 @@ class PetHumanController extends Controller
                 ], 400);
             }
 
-            // Só envia a frontal como imagem de controle pro service
             $urlsControle = [
                 'frontal' => $urls['frontal'],
-                // Focinho e angulo são armazenados no S3 e podem ser usados no futuro, mas não enviados pro Replicate agora
             ];
 
             $result = $this->transformationService->transformPet($urlsControle, $session, $breed);
-
-            // Junta as URLs de todas as imagens salvas ao resultado
             $result['uploaded_images'] = $urls;
 
             return response()->json($result);
