@@ -24,6 +24,9 @@ AWS_USE_PATH_STYLE_ENDPOINT=false
 
 REPLICATE_API_TOKEN=$REPLICATE_API_TOKEN
 REPLICATE_MODEL_VERSION=$REPLICATE_MODEL_VERSION
+
+MEGVI_API_KEY=$MEGVI_API_KEY
+MEGVI_API_SECRET=$MEGVI_API_SECRET
 EOF
 
 # Exporta APP_KEY para estar disponível no ambiente do shell
@@ -34,8 +37,10 @@ echo "upload_max_filesize = 15M" >> /usr/local/etc/php/conf.d/uploads.ini
 echo "post_max_size = 20M" >> /usr/local/etc/php/conf.d/uploads.ini
 echo "max_file_uploads = 10" >> /usr/local/etc/php/conf.d/uploads.ini
 
-# Mostra APP_KEY no terminal (para depuração)
+# Mostra APP_KEY e Megvi no terminal (para depuração)
 echo "APP_KEY lida pelo shell: $APP_KEY"
+echo "MEGVI_API_KEY presente: ${MEGVI_API_KEY:+SIM}"
+echo "MEGVI_API_SECRET presente: ${MEGVI_API_SECRET:+SIM}"
 echo "Conteúdo do .env:"
 cat .env
 
