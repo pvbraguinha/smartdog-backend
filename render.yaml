@@ -1,35 +1,29 @@
-databases:
-  - name: smartdog-db
-    plan: free
-    region: frankfurt
+use GuzzleHttp\Client;
 
-services:
-  - type: web
-    name: smartdog-backend
-    env: docker
-    plan: starter
-    region: frankfurt
-    repo: https://github.com/pvbraguinha/smartdog-backend
-    branch: main
-    autoDeploy: true
-    dockerContext: .
-    dockerfilePath: Dockerfile
-    envVars:
-      - key: APP_ENV
-        value: production
-      - key: APP_DEBUG
-        value: false
-      - key: APP_URL
-        value: https://smartdog-backend-vlm0.onrender.com/
-      - key: APP_KEY
-        value: base64:CdANHmCLLwnCYV7btlo6V/2qjNJ2ckiwh0fvLrkxjIQ=
-      - key: DATABASE_URL
-        fromDatabase:
-          name: smartdog-db
-          property: connectionString
-            - key: REPLICATE_API_TOKEN
-        fromDatabase:
-          name: REPLICATE_API_TOKEN
-      - key: REPLICATE_MODEL_VERSION
-        fromDatabase:
-          name: REPLICATE_MODEL_VERSION
+Route::get('/megvi-token', function () {
+    $apiKey = env('MEGVI_API_KEY');
+    $apiSecret = env('MEGVI_API_SECRET');
+
+    if (!$apiKey || !$apiSecret) {
+        return response()->json(['error' => 'Credenciais Megvi não configuradas.'], 500);
+    }
+
+    try {
+        $client = new Client();
+        $res = $client->post('https://api.megvii.com/faceid/v1/sdk/get_access_token', [
+            'form_params' => [
+                'api_key'    => $apiKey,
+                'api_secret' => $apiSecret,
+            ],
+            'timeout' => 15,
+        ]);
+
+        $body = json_decode($res->getBody(), true);
+        return response()->json($body);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Falha ao obter token da Megvi',
+            'details' => $e->getMessage()
+        ], 500);
+    }
+});

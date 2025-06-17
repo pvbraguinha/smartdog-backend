@@ -11,6 +11,7 @@ use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
 use App\Http\Controllers\PetHumanController;
 use App\Http\Controllers\PetTransformationController;
+use GuzzleHttp\Client;
 
 // Teste simples de status da API
 Route::get('/test', function () {
@@ -154,6 +155,35 @@ Route::get('/pet-human-count', function () {
         return response()->json([
             'error' => 'Erro ao contar imagens',
             'message' => $e->getMessage()
+        ], 500);
+    }
+});
+
+// ✅ NOVA ROTA: teste de token Megvi
+Route::get('/megvi-token', function () {
+    $apiKey = env('MEGVI_API_KEY');
+    $apiSecret = env('MEGVI_API_SECRET');
+
+    if (!$apiKey || !$apiSecret) {
+        return response()->json(['error' => 'Credenciais Megvi não configuradas.'], 500);
+    }
+
+    try {
+        $client = new Client();
+        $res = $client->post('https://api.megvii.com/faceid/v1/sdk/get_access_token', [
+            'form_params' => [
+                'api_key'    => $apiKey,
+                'api_secret' => $apiSecret,
+            ],
+            'timeout' => 15,
+        ]);
+
+        $body = json_decode($res->getBody(), true);
+        return response()->json($body);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Falha ao obter token da Megvi',
+            'details' => $e->getMessage()
         ], 500);
     }
 });
