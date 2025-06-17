@@ -11,7 +11,6 @@ use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
 use App\Http\Controllers\PetHumanController;
 use App\Http\Controllers\PetTransformationController;
-use GuzzleHttp\Client;
 
 // Teste simples de status da API
 Route::get('/test', function () {
@@ -159,31 +158,24 @@ Route::get('/pet-human-count', function () {
     }
 });
 
-// ✅ NOVA ROTA: teste de token Megvi
-Route::get('/megvi-token', function () {
-    $apiKey = env('MEGVI_API_KEY');
-    $apiSecret = env('MEGVI_API_SECRET');
-
-    if (!$apiKey || !$apiSecret) {
-        return response()->json(['error' => 'Credenciais Megvi não configuradas.'], 500);
-    }
-
+// ✅ NOVA ROTA: listar imagens de focinhos do SmartDog no S3
+Route::get('/s3/focinhos-smartdog', function () {
     try {
-        $client = new Client();
-        $res = $client->post('https://api.megvii.com/faceid/v1/sdk/get_access_token', [
-            'form_params' => [
-                'api_key'    => $apiKey,
-                'api_secret' => $apiSecret,
-            ],
-            'timeout' => 15,
-        ]);
+        $arquivos = Storage::disk('s3')->files('focinhos-smartdog');
+        $urls = array_map(function ($path) {
+            return Storage::disk('s3')->url($path);
+        }, $arquivos);
 
-        $body = json_decode($res->getBody(), true);
-        return response()->json($body);
+        return response()->json([
+            'success' => true,
+            'count' => count($urls),
+            'images' => $urls,
+        ]);
     } catch (\Exception $e) {
         return response()->json([
-            'error' => 'Falha ao obter token da Megvi',
-            'details' => $e->getMessage()
+            'success' => false,
+            'message' => 'Erro ao acessar o S3',
+            'error' => $e->getMessage(),
         ], 500);
     }
 });

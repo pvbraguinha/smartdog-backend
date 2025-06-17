@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Models\Dog;
 
 class DogRegistrationController extends Controller
@@ -25,9 +26,9 @@ class DogRegistrationController extends Controller
 
         if (!empty($validated['photo_base64'])) {
             $imageData = base64_decode($validated['photo_base64']);
-            $filename = 'snouts/' . uniqid() . '.jpg';
-            Storage::disk('public')->put($filename, $imageData);
-            $photoUrl = asset('storage/' . $filename);
+            $filename = 'focinhos-smartdog/' . now()->format('Y-m-d') . '/' . Str::random(15) . '.jpg';
+            Storage::disk('s3')->put($filename, $imageData, 'public');
+            $photoUrl = Storage::disk('s3')->url($filename);
         }
 
         $dog = Dog::create([
