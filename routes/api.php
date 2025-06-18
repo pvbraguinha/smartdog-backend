@@ -158,10 +158,6 @@ Route::get('/pet-human-count', function () {
     }
 });
 
-use App\Http\Controllers\MegviController;
-
-Route::post('/megvi-token', [MegviController::class, 'testar']);
-
 // ✅ NOVA ROTA: listar imagens de focinhos do SmartDog no S3
 Route::get('/s3/focinhos-smartdog', function () {
     try {
