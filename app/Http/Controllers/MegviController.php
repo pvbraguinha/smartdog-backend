@@ -15,7 +15,7 @@ class MegviController extends Controller
 
         $imagePath = $request->file('image')->getRealPath();
 
-        $response = Http::asMultipart()->post('https://api-cn.faceplusplus.com/facepp/v1/dognosedetect', [
+        $response = Http::asMultipart()->post('https://api-cn.faceplusplus.com/imagepp/v2/dognosedetect', [
             [
                 'name' => 'api_key',
                 'contents' => env('MEGVII_API_KEY'),
