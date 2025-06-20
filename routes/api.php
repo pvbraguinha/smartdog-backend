@@ -28,7 +28,7 @@ Route::get('/status', function () {
 // Rotas da aplicação (sem autenticação por enquanto)
 Route::post('/dogs', [DogRegistrationController::class, 'store']);
 Route::post('/snout-recognition', [SnoutRecognitionController::class, 'detect']);
-Route::post('/dogs/{id}/location', [DogLocationController::class, 'update']);
+Route::patch('/dogs/{id}/location', [DogLocationController::class, 'update']);
 Route::get('/user/history', [UserHistoryController::class, 'index']);
 Route::post('/upload-pet-images', [PetHumanController::class, 'upload']);
 Route::post('/transform-pet', [PetTransformationController::class, 'transform']);
