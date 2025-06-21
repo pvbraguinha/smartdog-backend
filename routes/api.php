@@ -158,6 +158,11 @@ Route::get('/pet-human-count', function () {
     }
 });
 
+use App\Http\Controllers\SnoutCompareController;
+
+Route::post('/snout-compare', [SnoutCompareController::class, 'compare']);
+
+
 // ✅ NOVA ROTA: listar imagens de focinhos do SmartDog no S3
 Route::get('/s3/focinhos-smartdog', function () {
     try {
