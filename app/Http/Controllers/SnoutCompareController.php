@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise;
+use Illuminate\Support\Facades\Log;
 
 class SnoutCompareController extends Controller
 {
@@ -34,11 +35,18 @@ class SnoutCompareController extends Controller
         $promises = [];
 
         foreach ($dogs as $dog) {
+            // Verifica se a URL está acessível antes de continuar
+            $imageContent = @file_get_contents($dog->photo_url);
+            if (!$dog->photo_url || !$imageContent) {
+                Log::warning("Imagem inválida ou inacessível para o dog ID {$dog->id}: {$dog->photo_url}");
+                continue;
+            }
+
             $refTemp = tmpfile();
             $metaRef = stream_get_meta_data($refTemp);
-            try {
-                file_put_contents($metaRef['uri'], file_get_contents($dog->photo_url));
+            file_put_contents($metaRef['uri'], $imageContent);
 
+            try {
                 $promises[$dog->id] = $client->postAsync('https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare', [
                     'multipart' => [
                         ['name' => 'api_key', 'contents' => env('MEGVI_API_KEY')],
@@ -48,6 +56,7 @@ class SnoutCompareController extends Controller
                     ]
                 ]);
             } catch (\Exception $e) {
+                Log::error("Erro ao criar comparação async para o dog ID {$dog->id}: {$e->getMessage()}");
                 continue;
             }
         }
