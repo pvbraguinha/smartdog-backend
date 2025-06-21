@@ -26,14 +26,17 @@ class SnoutRecognitionController extends Controller
         $imageBase64 = base64_encode(file_get_contents($request->file('image')->getRealPath()));
 
         try {
-            $client = new Client();
+            $client = new Client([
+                'timeout' => 60, // ⏱ Tempo máximo de execução
+                'connect_timeout' => 10, // ⏳ Tempo máximo de conexão
+            ]);
+
             $res = $client->post('https://api-cn.faceplusplus.com/imagepp/v2/dognosedetect', [
                 'form_params' => [
                     'api_key' => env('MEGVI_API_KEY'),
                     'api_secret' => env('MEGVI_API_SECRET'),
                     'image_base64' => $imageBase64,
-                ],
-                'timeout' => 20,
+                ]
             ]);
 
             $response = json_decode($res->getBody(), true);
