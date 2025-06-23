@@ -54,7 +54,7 @@ class SnoutCompareController extends Controller
 
         // 4) Prepara chamadas assíncronas multipart
         $client    = new Client(['timeout' => 30]);
-        $threshold = 50;
+        $threshold = 40;
         $best      = ['confidence' => 0, 'path' => null];
         $promises  = [];
 
