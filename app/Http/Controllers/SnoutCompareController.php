@@ -24,7 +24,6 @@ class SnoutCompareController extends Controller
         Storage::disk('s3')->put($tempFilename, file_get_contents($request->file('image')), 'public');
         $uploadedUrl = Storage::disk('s3')->url($tempFilename);
 
-        // Faz download da imagem enviada para memória
         $tempImage = tmpfile();
         $meta = stream_get_meta_data($tempImage);
         file_put_contents($meta['uri'], file_get_contents($uploadedUrl));
@@ -49,8 +48,8 @@ class SnoutCompareController extends Controller
             try {
                 $promises[$dog->id] = $client->postAsync('https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare', [
                     'multipart' => [
-                        ['name' => 'api_key', 'contents' => Config::get('services.megvi.key')],
-                        ['name' => 'api_secret', 'contents' => Config::get('services.megvi.secret')],
+                        ['name' => 'api_key', 'contents' => Config::get('services.megvii.key')],
+                        ['name' => 'api_secret', 'contents' => Config::get('services.megvii.secret')],
                         ['name' => 'image_file', 'contents' => fopen($meta['uri'], 'r')],
                         ['name' => 'image_ref_file', 'contents' => fopen($metaRef['uri'], 'r')],
                     ]
