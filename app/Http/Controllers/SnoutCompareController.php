@@ -17,15 +17,19 @@ class SnoutCompareController extends Controller
         $request->validate([
             'image' => 'required|image|max:5120',
         ]);
-        $file       = $request->file('image');
-        $ext        = $file->getClientOriginalExtension();
-        $tmpKey     = 'focinhos-smartdog/tmp/' . Str::random(20) . '.' . $ext;
-        Storage::disk('s3')->put($tmpKey, file_get_contents($file->getRealPath()), 'public');
-        $userUrl    = Storage::disk('s3')->url($tmpKey);
+        $file    = $request->file('image');
+        $ext     = $file->getClientOriginalExtension();
+        $tmpKey  = 'focinhos-smartdog/tmp/' . Str::random(20) . '.' . $ext;
+        Storage::disk('s3')->put(
+            $tmpKey,
+            file_get_contents($file->getRealPath()),
+            'public'
+        );
+        $userUrl = Storage::disk('s3')->url($tmpKey);
 
         // 2) Lista referências (excluindo tmp)
-        $all = Storage::disk('s3')->allFiles('focinhos-smartdog');
-        $paths = array_filter($all, fn($p) => ! Str::startsWith($p, 'focinhos-smartdog/tmp/'));
+        $all     = Storage::disk('s3')->allFiles('focinhos-smartdog');
+        $paths   = array_filter($all, fn($p) => ! Str::startsWith($p, 'focinhos-smartdog/tmp/'));
         if (empty($paths)) {
             return response()->json([
                 'recognized' => false,
@@ -33,54 +37,59 @@ class SnoutCompareController extends Controller
             ], 404);
         }
 
-        // 3) Compara usando URLs no Face++
+        // 3) Compara usando URLs no Face++ e guarda debug
         $client    = new Client(['timeout' => 15]);
         $threshold = 60;
-        $best = ['confidence' => 0, 'path' => null];
+        $best      = ['confidence' => 0, 'path' => null];
+        $debug     = [];
 
         foreach ($paths as $path) {
             $refUrl = Storage::disk('s3')->url($path);
 
             try {
-                $res = $client->post('https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare', [
-                    'form_params' => [
-                        'api_key'        => Config::get('services.megvii.key'),
-                        'api_secret'     => Config::get('services.megvii.secret'),
-                        'image_url'      => $userUrl,
-                        'image_ref_url'  => $refUrl,
-                    ],
-                ]);
+                $res = $client->post(
+                    'https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare',
+                    [
+                        'form_params' => [
+                            'api_key'       => Config::get('services.megvii.key'),
+                            'api_secret'    => Config::get('services.megvii.secret'),
+                            'image_url'     => $userUrl,
+                            'image_ref_url' => $refUrl,
+                        ],
+                    ]
+                );
 
-                $data = json_decode((string)$res->getBody(), true);
+                $body = (string) $res->getBody();
+                $data = json_decode($body, true);
+
+                // Armazena o debug completo
+                $debug[$path] = $data;
+
+                // Extrai confidence, se existir
                 $conf = $data['confidence'] ?? 0;
-                Log::info("Comparando {$path} => {$conf}");
+                Log::info("Comparando {$path} => " . json_encode($data));
 
                 if ($conf > $best['confidence']) {
                     $best = ['confidence' => $conf, 'path' => $path];
                 }
             } catch (\Exception $e) {
+                // Captura mensagem de erro no debug
+                $debug[$path] = ['error' => $e->getMessage()];
                 Log::warning("Erro comparando {$path}: " . $e->getMessage());
             }
         }
 
-        // 4) Decide resultado
-        if ($best['confidence'] >= $threshold) {
-            return response()->json([
-                'recognized'     => true,
-                'reference_path' => $best['path'],
-                'confidence'     => $best['confidence'],
-                'threshold'      => $threshold,
-                'user_url'       => $userUrl,
-                'message'        => 'Focinho reconhecido com sucesso.',
-            ]);
-        }
-
+        // 4) Retorna resultado incluindo debug para análise
         return response()->json([
-            'recognized'     => false,
+            'recognized'     => $best['confidence'] >= $threshold,
+            'reference_path' => $best['path'],
             'confidence_max' => $best['confidence'],
             'threshold'      => $threshold,
             'user_url'       => $userUrl,
-            'message'        => 'Nenhuma referência passou do threshold.',
+            'debug'          => $debug,
+            'message'        => $best['confidence'] >= $threshold
+                ? 'Focinho reconhecido com sucesso.'
+                : 'Nenhuma referência passou do threshold.',
         ], 200);
     }
 }
