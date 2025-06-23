@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Dog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
@@ -15,84 +14,99 @@ class SnoutCompareController extends Controller
 {
     public function compare(Request $request)
     {
-        $validated = $request->validate([
-            'image' => 'required|image'
+        // 1) Valida e faz upload temporário do focinho enviado pelo usuário
+        $request->validate([
+            'image' => 'required|image|max:5120',
         ]);
 
-        $dateFolder = now()->format('Y-m-d');
-        $tempFilename = "focinhos-smartdog/tmp/" . Str::random(20) . '.' . $request->file('image')->getClientOriginalExtension();
-        Storage::disk('s3')->put($tempFilename, file_get_contents($request->file('image')), 'public');
+        $tempFilename = 'focinhos-smartdog/tmp/' 
+            . Str::random(20) 
+            . '.' 
+            . $request->file('image')->getClientOriginalExtension();
+
+        Storage::disk('s3')->put(
+            $tempFilename,
+            file_get_contents($request->file('image')->getRealPath()),
+            'public'
+        );
+
+        // Geramos uma URL pública (pode ser temporária se preferir)
         $uploadedUrl = Storage::disk('s3')->url($tempFilename);
 
-        $tempImage = tmpfile();
-        $meta = stream_get_meta_data($tempImage);
-        file_put_contents($meta['uri'], file_get_contents($uploadedUrl));
+        // Carrega o conteúdo em memória para enviar ao comparador
+        $uploadedContents = file_get_contents($uploadedUrl);
 
-        $client = new Client(['timeout' => 15]);
+        // 2) Lista todas as focinhos no bucket
+        $paths = Storage::disk('s3')->allFiles('focinhos-smartdog');
+
+        if (empty($paths)) {
+            return response()->json([
+                'recognized' => false,
+                'message' => 'Não há imagens de referência cadastradas.',
+            ], 404);
+        }
+
+        // 3) Monta requisições assíncronas
+        $client    = new Client(['timeout' => 15]);
         $threshold = 60;
-        $dogs = Dog::whereNotNull('photo_url')->get();
+        $promises  = [];
 
-        $promises = [];
+        foreach ($paths as $path) {
+            // Baixa do S3 diretamente
+            $refContents = Storage::disk('s3')->get($path);
 
-        foreach ($dogs as $dog) {
-            $imageContent = @file_get_contents($dog->photo_url);
-            if (!$dog->photo_url || !$imageContent) {
-                Log::warning("⚠️ Imagem inválida ou inacessível para o dog ID {$dog->id}: {$dog->photo_url}");
-                continue;
-            }
-
+            // Cria um arquivo temporário em disco
             $refTemp = tmpfile();
             $metaRef = stream_get_meta_data($refTemp);
-            file_put_contents($metaRef['uri'], $imageContent);
+            file_put_contents($metaRef['uri'], $refContents);
 
-            try {
-                $promises[$dog->id] = $client->postAsync('https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare', [
+            // Dispara a chamada assíncrona
+            $promises[$path] = $client->postAsync(
+                'https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare',
+                [
                     'multipart' => [
-                        ['name' => 'api_key', 'contents' => Config::get('services.megvii.key')],
-                        ['name' => 'api_secret', 'contents' => Config::get('services.megvii.secret')],
-                        ['name' => 'image_file', 'contents' => fopen($meta['uri'], 'r')],
-                        ['name' => 'image_ref_file', 'contents' => fopen($metaRef['uri'], 'r')],
-                    ]
-                ]);
-            } catch (\Exception $e) {
-                Log::error("❌ Erro ao criar comparação async para o dog ID {$dog->id}: {$e->getMessage()}");
-                continue;
-            }
+                        ['name' => 'api_key',        'contents' => Config::get('services.megvii.key')],
+                        ['name' => 'api_secret',     'contents' => Config::get('services.megvii.secret')],
+                        ['name' => 'image_file',     'contents' => $uploadedContents, 'filename' => basename($tempFilename)],
+                        ['name' => 'image_ref_file', 'contents' => fopen($metaRef['uri'], 'r'), 'filename' => basename($path)],
+                    ],
+                ]
+            );
         }
 
+        // 4) Aguarda todas as respostas
         $results = Promise\Utils::settle($promises)->wait();
 
-        foreach ($results as $dogId => $result) {
+        // 5) Verifica qual correspondência passou do threshold
+        foreach ($results as $path => $result) {
             if ($result['state'] === 'fulfilled') {
                 $data = json_decode($result['value']->getBody(), true);
+                $conf = $data['confidence'] ?? null;
 
-                Log::info("🔍 Dog ID {$dogId} - Confiança recebida: " . ($data['confidence'] ?? 'null'));
+                Log::info("🔍 Comparação {$path} - confidence: {$conf}");
 
-                if (isset($data['confidence']) && $data['confidence'] >= $threshold) {
-                    $dog = Dog::find($dogId);
-                    Log::info("🎯 Cão reconhecido - ID {$dog->id} - Confidence: {$data['confidence']}");
-
+                if ($conf !== null && $conf >= $threshold) {
                     return response()->json([
-                        'recognized' => true,
-                        'dog_id' => $dog->id,
-                        'name' => $dog->name,
-                        'status' => $dog->status,
-                        'phone' => $dog->status === 'perdido' ? $dog->phone : null,
-                        'confidence' => $data['confidence'],
-                        'threshold' => $threshold,
-                        'photo_url' => $dog->photo_url,
-                        'message' => 'Cão reconhecido com sucesso.'
+                        'recognized'    => true,
+                        'reference_path'=> $path,
+                        'confidence'    => $conf,
+                        'threshold'     => $threshold,
+                        'uploaded_url'  => $uploadedUrl,
+                        'message'       => 'Focinho reconhecido com sucesso.',
                     ]);
                 }
+            } else {
+                Log::warning("⚠️ Falha ao comparar {$path}: " . $result['reason']);
             }
         }
 
-        Log::info("📉 Nenhum cão reconhecido com confiança ≥ {$threshold}");
+        // Se ninguém passou do threshold
+        Log::info("📉 Nenhuma correspondência acima de {$threshold}");
 
         return response()->json([
-            'recognized' => false,
-            'message' => 'Focinho não reconhecido em nenhum dos cães registrados.',
-            'photo_uploaded' => $uploadedUrl
+            'recognized'    => false,
+            'message'       => 'Focinho não reconhecido em nenhuma imagem de referência.',
+            'uploaded_url'  => $uploadedUrl,
         ]);
     }
 }
