@@ -28,10 +28,10 @@ return [
         'version' => env('REPLICATE_MODEL_VERSION'),
     ],
 
-];
-
-    'megvi' => [
+    // ✅ Bloco da Megvii adicionado corretamente:
+    'megvii' => [
         'key' => env('MEGVI_API_KEY'),
         'secret' => env('MEGVI_API_SECRET'),
     ],
 
+];
