@@ -15,6 +15,15 @@ class DogRegistrationController extends Controller
         Log::info('📥 Iniciando registro de novo animal...');
 
         try {
+            Log::info('🟢 [2] Iniciando validação dos dados');
+
+            // Normaliza o valor do campo gender antes da validação
+            if ($request->has('gender')) {
+                $genero = strtolower($request->input('gender'));
+                $genero = str_replace(['á', 'ã', 'â', 'é', 'ê'], ['a', 'a', 'a', 'e', 'e'], $genero);
+                $request->merge(['gender' => $genero]);
+            }
+
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'age' => 'nullable|string|max:50',
@@ -53,10 +62,8 @@ class DogRegistrationController extends Controller
                     $photoUrl = Storage::disk('s3')->url($filename);
 
                     Log::info('📸 Imagem salva com sucesso no S3:', ['url' => $photoUrl]);
-
                 } catch (\Exception $e) {
                     Log::error('❌ Erro ao salvar imagem base64 no S3: ' . $e->getMessage());
-
                     return response()->json([
                         'success' => false,
                         'message' => 'Erro ao salvar a imagem no servidor.',
@@ -79,7 +86,7 @@ class DogRegistrationController extends Controller
                     'show_phone' => true,
                 ];
 
-                Log::info('📦 Dados a serem salvos no banco (Dog::create): ' . json_encode($dogData));
+                Log::info('📦 Dados a serem salvos no banco:', $dogData);
 
                 $dog = Dog::create($dogData);
 
