@@ -19,83 +19,84 @@ class SnoutCompareController extends Controller
             'image' => 'required|image|max:5120',
         ]);
 
-        $file   = $request->file('image');
-        $ext    = $file->getClientOriginalExtension();
-        $tmpKey = 'focinhos-smartdog/tmp/' . Str::random(20) . '.' . $ext;
+        $uploadFile = $request->file('image');
+        $ext        = $uploadFile->getClientOriginalExtension();
+        $tmpKey     = 'focinhos-smartdog/tmp/' . Str::random(20) . '.' . $ext;
 
+        // Armazena temporariamente no S3
         Storage::disk('s3')->put(
             $tmpKey,
-            file_get_contents($file->getRealPath()),
+            file_get_contents($uploadFile->getRealPath()),
             'public'
         );
 
-        $userUrl = Storage::disk('s3')->url($tmpKey);
+        // Prepara stream para multipart
+        $userStream = fopen($uploadFile->getRealPath(), 'r');
 
         // 2) Lista referências (excluindo tmp)
         $allPaths = Storage::disk('s3')->allFiles('focinhos-smartdog');
-        $paths = array_filter($allPaths, fn($p) => !Str::startsWith($p, 'focinhos-smartdog/tmp/'));
+        $refs     = array_filter($allPaths, fn($p) => !Str::startsWith($p, 'focinhos-smartdog/tmp/'));
 
-        if (empty($paths)) {
+        if (empty($refs)) {
             return response()->json([
                 'recognized' => false,
                 'message'    => 'Não há imagens de referência cadastradas.',
             ], 404);
         }
 
-        // 3) Prepara requisições assíncronas
-        $client    = new Client(['timeout' => 10]);
+        // 3) Compara cada referência usando multipart/form-data
+        $client    = new Client(['timeout' => 20]);
         $threshold = 60;
+        $best      = ['confidence' => 0, 'path' => null];
         $promises  = [];
-        $debug     = [];
 
-        foreach ($paths as $path) {
-            $refUrl = Storage::disk('s3')->url($path);
+        foreach ($refs as $path) {
+            // Baixa o binário da referência
+            $content = Storage::disk('s3')->get($path);
+            $refTemp = tmpfile();
+            $mdata   = stream_get_meta_data($refTemp);
+            file_put_contents($mdata['uri'], $content);
+
             $promises[$path] = $client->postAsync(
                 'https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare',
                 [
-                    'form_params' => [
-                        'api_key'       => Config::get('services.megvii.key'),
-                        'api_secret'    => Config::get('services.megvii.secret'),
-                        'image_url'     => $userUrl,
-                        'image_ref_url' => $refUrl,
+                    'multipart' => [
+                        ['name'=>'api_key',        'contents'=>Config::get('services.megvii.key')],
+                        ['name'=>'api_secret',     'contents'=>Config::get('services.megvii.secret')],
+                        ['name'=>'image_file',     'contents'=>fopen($uploadFile->getRealPath(),'r'), 'filename'=>'user.'.$ext],
+                        ['name'=>'image_ref_file', 'contents'=>fopen($mdata['uri'],'r'),         'filename'=>basename($path)],
                     ],
                 ]
-            )->then(
-                function ($response) use (&$debug, $path) {
-                    $data = json_decode((string)$response->getBody(), true);
-                    $debug[$path] = $data;
-                },
-                function ($reason) use (&$debug, $path) {
-                    $error = $reason instanceof \Exception ? $reason->getMessage() : (string)$reason;
-                    $debug[$path] = ['error' => $error];
-                    Log::warning("Erro comparando {$path}: {$error}");
-                }
             );
         }
 
-        // 4) Executa todas em paralelo e espera
-        Promise\Utils::settle($promises)->wait();
+        // Aguarda todas as comparações
+        $results = Promise\Utils::settle($promises)->wait();
 
-        // 5) Avalia o melhor resultado
-        $best = ['confidence' => 0, 'path' => null];
-        foreach ($debug as $path => $data) {
-            $conf = $data['confidence'] ?? 0;
-            if (is_numeric($conf) && $conf > $best['confidence']) {
-                $best = ['confidence' => $conf, 'path' => $path];
+        // 4) Avalia melhores resultados
+        foreach ($results as $path => $res) {
+            if ($res['state'] === 'fulfilled') {
+                $data = json_decode((string)$res['value']->getBody(), true);
+                $conf = $data['confidence'] ?? 0;
+                Log::info("Comparando {$path} => {$conf}");
+
+                if (is_numeric($conf) && $conf > $best['confidence']) {
+                    $best = ['confidence' => $conf, 'path' => $path];
+                }
+            } else {
+                Log::warning("Erro comparando {$path}: " . $res['reason']);
             }
         }
 
-        // 6) Retorna resposta
+        // 5) Retorna resultado
         return response()->json([
             'recognized'     => $best['confidence'] >= $threshold,
             'reference_path' => $best['path'],
             'confidence_max' => $best['confidence'],
             'threshold'      => $threshold,
-            'user_url'       => $userUrl,
-            'debug'          => $debug,
             'message'        => $best['confidence'] >= $threshold
-                ? 'Focinho reconhecido com sucesso.'
-                : 'Nenhuma referência passou do threshold.',
+                                 ? 'Focinho reconhecido com sucesso.'
+                                 : 'Nenhuma referência passou do threshold.',
         ], 200);
     }
 }
