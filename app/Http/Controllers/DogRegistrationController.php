@@ -20,7 +20,8 @@ class DogRegistrationController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'age' => 'nullable|string|max:50',
-                'gender' => 'nullable|in:macho,femea',
+                // 🔧 Gênero agora aceita qualquer string de até 20 caracteres
+                'gender' => 'nullable|string|max:20',
                 'breed' => 'nullable|string|max:100',
                 'owner_name' => 'required|string|max:255',
                 'phone' => 'required|string|max:20',
