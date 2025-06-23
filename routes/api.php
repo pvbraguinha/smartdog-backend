@@ -11,6 +11,7 @@ use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
 use App\Http\Controllers\PetHumanController;
 use App\Http\Controllers\PetTransformationController;
+use App\Http\Controllers\SnoutCompareController;
 
 // Teste simples de status da API
 Route::get('/test', function () {
@@ -158,29 +159,29 @@ Route::get('/pet-human-count', function () {
     }
 });
 
-use App\Http\Controllers\SnoutCompareController;
-
+// ✅ NOVA ROTA: comparar focinhos via controlador
 Route::post('/snout-compare', [SnoutCompareController::class, 'compare']);
-
 
 // ✅ NOVA ROTA: listar imagens de focinhos do SmartDog no S3
 Route::get('/s3/focinhos-smartdog', function () {
     try {
-        $arquivos = Storage::disk('s3')->allFiles('meu-pet-humano-imagens/focinhos-smartdog');
+        // Busca recursivamente tudo que está sob a pasta "focinhos-smartdog" na raiz do bucket
+        $arquivos = Storage::disk('s3')->allFiles('focinhos-smartdog');
+
         $urls = array_map(function ($path) {
             return Storage::disk('s3')->url($path);
         }, $arquivos);
 
         return response()->json([
             'success' => true,
-            'count' => count($urls),
-            'images' => $urls,
+            'count'   => count($urls),
+            'images'  => $urls,
         ]);
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,
             'message' => 'Erro ao acessar o S3',
-            'error' => $e->getMessage(),
+            'error'   => $e->getMessage(),
         ], 500);
     }
 });
