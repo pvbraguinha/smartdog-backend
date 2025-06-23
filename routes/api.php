@@ -17,9 +17,8 @@ Route::get('/test', fn() => response()->json(['status' => 'API está no ar!']));
 Route::post('/test-post', fn() => response()->json(['message' => 'POST funcionando']));
 Route::get('/status', fn() => response()->json(['message' => 'SmartDog API is working!']));
 
-// ✅ Substituído detect() por recognize()
+// Rotas principais
 Route::post('/snout-recognition', [SnoutRecognitionController::class, 'recognize']);
-
 Route::post('/dogs', [DogRegistrationController::class, 'store']);
 Route::patch('/dogs/{id}/location', [DogLocationController::class, 'update']);
 Route::get('/user/history', [UserHistoryController::class, 'index']);
@@ -123,11 +122,29 @@ Route::get('/pet-human-count', function () {
 
 Route::post('/snout-compare', [SnoutCompareController::class, 'compare']);
 
+// Corrigido para buscar imagens nas subpastas do bucket
 Route::get('/s3/focinhos-smartdog', function () {
     try {
-        $arquivos = Storage::disk('s3')->files('focinhos-smartdog');
-        $urls = array_map(fn($path) => Storage::disk('s3')->url($path), $arquivos);
-        return response()->json(['success' => true, 'count' => count($urls), 'images' => $urls]);
+        $allFiles = [];
+        $baseFolder = 'uploads/meu-pet-humano-imagens/focinhos-smartdog';
+
+        // Listar todas as subpastas dentro da pasta base
+        $folders = Storage::disk('s3')->directories($baseFolder);
+
+        // Para cada subpasta, pega os arquivos e adiciona ao array
+        foreach ($folders as $folder) {
+            $files = Storage::disk('s3')->files($folder);
+            $allFiles = array_merge($allFiles, $files);
+        }
+
+        // Gerar URLs públicas para todos os arquivos encontrados
+        $urls = array_map(fn($path) => Storage::disk('s3')->url($path), $allFiles);
+
+        return response()->json([
+            'success' => true,
+            'count' => count($urls),
+            'images' => $urls,
+        ]);
     } catch (\Exception $e) {
         return response()->json([
             'success' => false,

@@ -7,75 +7,91 @@ use App\Models\Dog;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use GuzzleHttp\Client;
+use GuzzleHttp\Promise;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 class SnoutRecognitionController extends Controller
 {
-    public function detect(Request $request)
+    public function recognize(Request $request)
     {
         $validated = $request->validate([
             'image' => 'required|image'
         ]);
 
-        // Salva imagem no S3 em pasta focinhos-smartdog/yyyy-mm-dd
+        // Salvar imagem temporária no S3
         $dateFolder = now()->format('Y-m-d');
-        $filename = "focinhos-smartdog/{$dateFolder}/" . Str::random(15) . '.' . $request->file('image')->getClientOriginalExtension();
-        Storage::disk('s3')->put($filename, file_get_contents($request->file('image')), 'public');
-        $imageUrl = Storage::disk('s3')->url($filename);
+        $tempFilename = "focinhos-smartdog/tmp/" . Str::random(20) . '.' . $request->file('image')->getClientOriginalExtension();
+        Storage::disk('s3')->put($tempFilename, file_get_contents($request->file('image')), 'public');
+        $uploadedUrl = Storage::disk('s3')->url($tempFilename);
 
-        // Converte imagem para base64
-        $imageBase64 = base64_encode(file_get_contents($request->file('image')->getRealPath()));
+        // Baixar para memória
+        $tempImage = tmpfile();
+        $meta = stream_get_meta_data($tempImage);
+        file_put_contents($meta['uri'], file_get_contents($uploadedUrl));
 
-        try {
-            $client = new Client([
-                'timeout' => 60, // ⏱ Tempo máximo de execução
-                'connect_timeout' => 10, // ⏳ Tempo máximo de conexão
-            ]);
+        $client = new Client(['timeout' => 20]);
+        $threshold = 60;
+        $dogs = Dog::whereNotNull('photo_url')->get();
+        $promises = [];
 
-            $res = $client->post('https://api-cn.faceplusplus.com/imagepp/v2/dognosedetect', [
-                'form_params' => [
-                    'api_key' => env('MEGVI_API_KEY'),
-                    'api_secret' => env('MEGVI_API_SECRET'),
-                    'image_base64' => $imageBase64,
-                ]
-            ]);
-
-            $response = json_decode($res->getBody(), true);
-
-            if (!isset($response['confidence']) || $response['confidence'] < 0.85) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Focinho não reconhecido com confiança suficiente.',
-                    'confidence' => $response['confidence'] ?? null,
-                    'image_url' => $imageUrl
-                ], 404);
+        foreach ($dogs as $dog) {
+            $imageContent = @file_get_contents($dog->photo_url);
+            if (!$imageContent) {
+                Log::warning("⚠️ Imagem inacessível para o dog ID {$dog->id}: {$dog->photo_url}");
+                continue;
             }
 
-            // Simula retorno com o Dog ID 1
-            $dog = Dog::find(1);
-            if (!$dog) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cão simulado (ID 1) não encontrado no banco.'
-                ], 404);
+            $refTemp = tmpfile();
+            $metaRef = stream_get_meta_data($refTemp);
+            file_put_contents($metaRef['uri'], $imageContent);
+
+            try {
+                $promises[$dog->id] = $client->postAsync('https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare', [
+                    'multipart' => [
+                        ['name' => 'api_key', 'contents' => Config::get('services.megvi.key')],
+                        ['name' => 'api_secret', 'contents' => Config::get('services.megvi.secret')],
+                        ['name' => 'image_file', 'contents' => fopen($meta['uri'], 'r')],
+                        ['name' => 'image_ref_file', 'contents' => fopen($metaRef['uri'], 'r')],
+                    ]
+                ]);
+            } catch (\Exception $e) {
+                Log::error("❌ Erro ao criar requisição async: {$e->getMessage()}");
+                continue;
             }
-
-            return response()->json([
-                'success' => true,
-                'dog_id' => $dog->id,
-                'name' => $dog->name,
-                'status' => $dog->status,
-                'phone' => $dog->status === 'perdido' ? $dog->phone : null,
-                'confidence' => $response['confidence'],
-                'image_url' => $imageUrl,
-                'message' => 'Focinho reconhecido com sucesso.'
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Erro ao processar a imagem com a Megvi.',
-                'error' => $e->getMessage()
-            ], 500);
         }
+
+        $results = Promise\Utils::settle($promises)->wait();
+
+        foreach ($results as $dogId => $result) {
+            if ($result['state'] === 'fulfilled') {
+                $data = json_decode($result['value']->getBody(), true);
+                $confidence = $data['confidence'] ?? 0;
+
+                Log::info("🐾 Dog ID {$dogId} - Confiança: {$confidence}");
+
+                if ($confidence >= $threshold) {
+                    $dog = Dog::find($dogId);
+                    Log::info("✅ Cão reconhecido: {$dog->name} (ID {$dog->id})");
+
+                    return response()->json([
+                        'recognized' => true,
+                        'dog_id' => $dog->id,
+                        'name' => $dog->name,
+                        'status' => $dog->status,
+                        'phone' => $dog->status === 'perdido' ? $dog->phone : null,
+                        'confidence' => $confidence,
+                        'photo_url' => $dog->photo_url,
+                        'message' => 'Cão reconhecido com sucesso.'
+                    ]);
+                }
+            }
+        }
+
+        return response()->json([
+            'recognized' => false,
+            'message' => 'Nenhum focinho correspondente encontrado.',
+            'photo_uploaded' => $uploadedUrl
+        ]);
     }
 }
