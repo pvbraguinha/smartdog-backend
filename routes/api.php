@@ -11,7 +11,6 @@ use App\Http\Controllers\UserHistoryController;
 use App\Http\Controllers\DogRegistrationController;
 use App\Http\Controllers\PetHumanController;
 use App\Http\Controllers\PetTransformationController;
-use App\Http\Controllers\SnoutCompareController;
 
 // Teste simples de status da API
 Route::get('/test', function () {
@@ -163,12 +162,11 @@ use App\Http\Controllers\SnoutCompareController;
 
 Route::post('/snout-compare', [SnoutCompareController::class, 'compare']);
 
-// ✅ NOVA ROTA: listar imagens de focinhos do SmartDog no S3, pasta do dia atual
+
+// ✅ NOVA ROTA: listar imagens de focinhos do SmartDog no S3
 Route::get('/s3/focinhos-smartdog', function () {
     try {
-        $folder = now()->format('Y-m-d');
-        $baseFolder = "meu-pet-humano-imagens/focinhos-smartdog/{$folder}";
-        $arquivos = Storage::disk('s3')->files($baseFolder);
+        $arquivos = Storage::disk('s3')->allFiles('meu-pet-humano-imagens/focinhos-smartdog');
         $urls = array_map(function ($path) {
             return Storage::disk('s3')->url($path);
         }, $arquivos);
