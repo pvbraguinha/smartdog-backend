@@ -106,7 +106,10 @@ class SnoutCompareController extends Controller
             }
         }
 
-        $dog = $best['path'] ? Dog::where('photo_url', $best['path'])->first() : null;
+        $dog = null;
+        if ($best['path']) {
+            $dog = Dog::where('photo_url', 'LIKE', '%' . $best['path'])->first();
+        }
 
         return response()->json([
             'success'         => true,
@@ -126,6 +129,9 @@ class SnoutCompareController extends Controller
                 'status'        => $dog->status,
                 'phone_visible' => $dog->phone_visible,
                 'owner_phone'   => $dog->owner_phone,
+                'owner_name'    => $dog->owner_name,
+                'email'         => $dog->email,
+                'breed'         => $dog->breed,
                 'photo_url'     => $dog->photo_url,
             ] : null,
         ], 200);
