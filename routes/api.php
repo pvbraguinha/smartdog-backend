@@ -78,9 +78,7 @@ Route::get('/public-gallery', function () {
 
     foreach ($tipos as $tipo) {
         $arquivos = Storage::disk('public')->files("uploads/meupethumano/{$tipo}");
-        $galeria[$tipo] = array_map(function ($path) use ($baseUrl) {
-            return $baseUrl . '/' . $path;
-        }, $arquivos);
+        $galeria[$tipo] = array_map(fn($path) => $baseUrl . '/' . $path, $arquivos);
     }
 
     return response()->json($galeria);
@@ -99,25 +97,19 @@ Route::get('/debug-storage', function () {
 Route::get('/test-s3', function () {
     try {
         $files = Storage::disk('s3')->files();
-        return response()->json([
-            'status' => 'S3 conectado com sucesso!',
-            'files' => $files
-        ]);
+        return response()->json(['status' => 'S3 conectado com sucesso!', 'files' => $files]);
     } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'Erro na conexão com S3',
-            'error' => $e->getMessage()
-        ], 500);
+        return response()->json(['status' => 'Erro na conexão com S3', 'error' => $e->getMessage()], 500);
     }
 });
 
 // Debug das variáveis S3
 Route::get('/debug-s3-vars', function () {
     return response()->json([
-        'region'      => env('AWS_DEFAULT_REGION'),
-        'bucket'      => env('AWS_BUCKET'),
-        'access_key'  => env('AWS_ACCESS_KEY_ID'),
-        'secret_set'  => !empty(env('AWS_SECRET_ACCESS_KEY')),
+        'region' => env('AWS_DEFAULT_REGION'),
+        'bucket' => env('AWS_BUCKET'),
+        'access_key' => env('AWS_ACCESS_KEY_ID'),
+        'secret_set' => !empty(env('AWS_SECRET_ACCESS_KEY')),
     ]);
 });
 
@@ -133,55 +125,36 @@ Route::get('/debug-app-key', function () {
 // Debug da API do Replicate
 Route::get('/api/debug-replicate', function () {
     return response()->json([
-        'token_ok' => config('services.replicate.token') ? true : false,
-        'model_ok' => config('services.replicate.version') ? true : false,
-        'token_prefix' => substr(config('services.replicate.token'), 0, 5),
+        'token_ok' => !empty(config('services.replicate.token')),
+        'model_ok' => !empty(config('services.replicate.version')),
+        'token_prefix' => substr(config('services.replicate.token') ?? '', 0, 5),
     ]);
 });
 
-// ✅ NOVA ROTA: contagem de uploads de pets no S3
+// Nova rota: contagem de uploads de pets no S3
 Route::get('/pet-human-count', function () {
     try {
         $tipos = ['frontal', 'focinho'];
         $total = 0;
-
         foreach ($tipos as $tipo) {
-            $arquivos = Storage::disk('s3')->files("uploads/meupethumano/{$tipo}");
-            $total += count($arquivos);
+            $total += count(Storage::disk('s3')->files("uploads/meupethumano/{$tipo}"));
         }
-
         return response()->json(['count' => $total]);
     } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Erro ao contar imagens',
-            'message' => $e->getMessage()
-        ], 500);
+        return response()->json(['error' => 'Erro ao contar imagens', 'message' => $e->getMessage()], 500);
     }
 });
 
-// ✅ NOVA ROTA: comparar focinhos via controlador
-Route::post('/snout-compare', [SnoutCompareController::class, 'compare']);
-
-// ✅ NOVA ROTA: listar imagens de focinhos do SmartDog no S3
+// Rota de comparação de focinhos no S3
 Route::get('/s3/focinhos-smartdog', function () {
     try {
-        // Busca recursivamente tudo que está sob a pasta "focinhos-smartdog" na raiz do bucket
         $arquivos = Storage::disk('s3')->allFiles('focinhos-smartdog');
-
-        $urls = array_map(function ($path) {
-            return Storage::disk('s3')->url($path);
-        }, $arquivos);
-
-        return response()->json([
-            'success' => true,
-            'count'   => count($urls),
-            'images'  => $urls,
-        ]);
+        $urls = array_map(fn($p) => Storage::disk('s3')->url($p), $arquivos);
+        return response()->json(['success' => true, 'count' => count($urls), 'images' => $urls]);
     } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Erro ao acessar o S3',
-            'error'   => $e->getMessage(),
-        ], 500);
+        return response()->json(['success' => false, 'message' => 'Erro ao acessar o S3', 'error' => $e->getMessage()], 500);
     }
 });
+
+// Rota de comparação de focinhos (snout-compare)
+Route::post('/snout-compare', [SnoutCompareController::class, 'compare']);
