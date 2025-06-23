@@ -29,16 +29,15 @@ class SnoutCompareController extends Controller
         file_put_contents($meta['uri'], file_get_contents($uploadedUrl));
 
         $client = new Client(['timeout' => 15]);
-        $threshold = 72;
+        $threshold = 60;
         $dogs = Dog::whereNotNull('photo_url')->get();
 
         $promises = [];
 
         foreach ($dogs as $dog) {
-            // Verifica se a URL está acessível antes de continuar
             $imageContent = @file_get_contents($dog->photo_url);
             if (!$dog->photo_url || !$imageContent) {
-                Log::warning("Imagem inválida ou inacessível para o dog ID {$dog->id}: {$dog->photo_url}");
+                Log::warning("⚠️ Imagem inválida ou inacessível para o dog ID {$dog->id}: {$dog->photo_url}");
                 continue;
             }
 
@@ -56,7 +55,7 @@ class SnoutCompareController extends Controller
                     ]
                 ]);
             } catch (\Exception $e) {
-                Log::error("Erro ao criar comparação async para o dog ID {$dog->id}: {$e->getMessage()}");
+                Log::error("❌ Erro ao criar comparação async para o dog ID {$dog->id}: {$e->getMessage()}");
                 continue;
             }
         }
@@ -66,8 +65,13 @@ class SnoutCompareController extends Controller
         foreach ($results as $dogId => $result) {
             if ($result['state'] === 'fulfilled') {
                 $data = json_decode($result['value']->getBody(), true);
+
+                Log::info("🔍 Dog ID {$dogId} - Confiança recebida: " . ($data['confidence'] ?? 'null'));
+
                 if (isset($data['confidence']) && $data['confidence'] >= $threshold) {
                     $dog = Dog::find($dogId);
+                    Log::info("🎯 Cão reconhecido - ID {$dog->id} - Confidence: {$data['confidence']}");
+
                     return response()->json([
                         'recognized' => true,
                         'dog_id' => $dog->id,
@@ -82,6 +86,8 @@ class SnoutCompareController extends Controller
                 }
             }
         }
+
+        Log::info("📉 Nenhum cão reconhecido com confiança ≥ {$threshold}");
 
         return response()->json([
             'recognized' => false,
