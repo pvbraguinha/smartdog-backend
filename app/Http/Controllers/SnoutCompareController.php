@@ -107,7 +107,7 @@ class SnoutCompareController extends Controller
         }
 
         $dog = $best['path']
-            ? Dog::where('photo_url', $best['path'])
+            ? Dog::where('photo_url', 'like', '%' . $best['path'] . '%')
                   ->whereNotNull('name')
                   ->where('name', '!=', '')
                   ->first()
