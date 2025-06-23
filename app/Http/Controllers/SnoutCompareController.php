@@ -14,22 +14,17 @@ class SnoutCompareController extends Controller
 {
     public function compare(Request $request)
     {
-        // 1) Valida e faz upload temporário do focinho enviado
+        // 1) Valida e prepara o focinho enviado pelo usuário
         $request->validate([
             'image' => 'required|image|max:5120',
         ]);
 
-        $extension = $request->file('image')->getClientOriginalExtension();
-        $tempFilename = 'focinhos-smartdog/tmp/' . Str::random(20) . '.' . $extension;
-        Storage::disk('s3')->put(
-            $tempFilename,
-            file_get_contents($request->file('image')->getRealPath()),
-            'public'
-        );
-        $uploadedUrl      = Storage::disk('s3')->url($tempFilename);
-        $uploadedContents = file_get_contents($uploadedUrl);
+        // cria um temp file local para enviar ao Face++
+        $uploadedFile = $request->file('image');
+        $uploadedStream = fopen($uploadedFile->getRealPath(), 'r');
+        $extension      = $uploadedFile->getClientOriginalExtension();
 
-        // 2) Lista todas as imagens de referência, excetuando a própria pasta tmp
+        // 2) Lista todas as imagens de referência (excluindo tmp)
         $allPaths = Storage::disk('s3')->allFiles('focinhos-smartdog');
         $paths = array_filter($allPaths, function($p) {
             return ! Str::startsWith($p, 'focinhos-smartdog/tmp/');
@@ -49,10 +44,10 @@ class SnoutCompareController extends Controller
 
         foreach ($paths as $path) {
             try {
+                // pega o conteúdo da referência
                 $refContents = Storage::disk('s3')->get($path);
-
-                $refTemp = tmpfile();
-                $metaRef = stream_get_meta_data($refTemp);
+                $refTemp      = tmpfile();
+                $metaRef      = stream_get_meta_data($refTemp);
                 file_put_contents($metaRef['uri'], $refContents);
 
                 $promises[$path] = $client->postAsync(
@@ -61,52 +56,57 @@ class SnoutCompareController extends Controller
                         'multipart' => [
                             ['name' => 'api_key',        'contents' => Config::get('services.megvii.key')],
                             ['name' => 'api_secret',     'contents' => Config::get('services.megvii.secret')],
-                            ['name' => 'image_file',     'contents' => $uploadedContents,                   'filename' => 'user.' . $extension],
-                            ['name' => 'image_ref_file', 'contents' => fopen($metaRef['uri'], 'r'),       'filename' => basename($path)],
+                            ['name' => 'image_file',     'contents' => $uploadedStream,       'filename' => 'user.'.$extension],
+                            ['name' => 'image_ref_file', 'contents' => fopen($metaRef['uri'], 'r'), 'filename' => basename($path)],
                         ],
                     ]
                 );
             } catch (\Exception $e) {
-                Log::error("Erro comparando {$path}: {$e->getMessage()}");
+                // armazena a exception para debug
+                $promises[$path] = Promise\rejection_for($e);
             }
         }
 
+        // 4) Aguarda todas as respostas
         $results = Promise\Utils::settle($promises)->wait();
 
-        // 4) Coleta todas as confidências
+        // 5) Monta array de confidences e erros
         $confidences = [];
         foreach ($results as $path => $result) {
             if ($result['state'] === 'fulfilled') {
-                $data = json_decode($result['value']->getBody(), true);
-                $conf  = $data['confidence'] ?? null;
-                $confidences[$path] = $conf;
+                $body = (string) $result['value']->getBody();
+                $data = json_decode($body, true);
+                $conf = $data['confidence'] ?? null;
+                $confidences[$path] = is_null($conf) ? 'null' : $conf;
             } else {
-                $confidences[$path] = 'error';
-                Log::warning("Falha na resposta de {$path}: " . $result['reason']);
+                // pega a mensagem de erro da promise
+                $reason = $result['reason'];
+                $confidences[$path] = method_exists($reason, 'getMessage')
+                    ? $reason->getMessage()
+                    : (string) $reason;
+                Log::warning("Erro comparando {$path}: " . $confidences[$path]);
             }
         }
 
-        // 5) Verifica correspondência acima do limiar
+        // 6) Verifica correspondência acima do threshold
         foreach ($confidences as $path => $conf) {
             if (is_numeric($conf) && $conf >= $threshold) {
                 return response()->json([
-                    'recognized'     => true,
-                    'reference_path' => $path,
-                    'confidence'     => $conf,
-                    'threshold'      => $threshold,
-                    'uploaded_url'   => $uploadedUrl,
-                    'confidences'    => $confidences,  // debug completo
-                    'message'        => 'Focinho reconhecido com sucesso.',
+                    'recognized'    => true,
+                    'reference_path'=> $path,
+                    'confidence'    => $conf,
+                    'threshold'     => $threshold,
+                    'confidences'   => $confidences,
+                    'message'       => 'Focinho reconhecido com sucesso.',
                 ]);
             }
         }
 
-        // 6) Nenhuma passou
+        // 7) Retorna debug completo se nada passar
         return response()->json([
             'recognized'   => false,
             'message'      => 'Focinho não reconhecido em nenhuma imagem de referência.',
-            'uploaded_url' => $uploadedUrl,
-            'confidences'  => $confidences,  // debug completo
+            'confidences'  => $confidences,
         ], 200);
     }
 }
