@@ -12,6 +12,8 @@ class DogRegistrationController extends Controller
 {
     public function store(Request $request)
     {
+        Log::info('📥 Iniciando registro de novo animal...');
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -23,6 +25,8 @@ class DogRegistrationController extends Controller
                 'email' => 'nullable|email|max:255',
                 'photo_base64' => 'nullable|string'
             ]);
+
+            Log::info('✅ Dados validados com sucesso.', $validated);
 
             $photoUrl = null;
 
@@ -38,6 +42,7 @@ class DogRegistrationController extends Controller
                     $imageData = base64_decode($base64String);
 
                     if ($imageData === false) {
+                        Log::warning('⚠️ base64_decode falhou.');
                         return response()->json([
                             'success' => false,
                             'message' => 'Erro ao decodificar a imagem enviada.'
@@ -48,8 +53,10 @@ class DogRegistrationController extends Controller
                     Storage::disk('s3')->put($filename, $imageData, 'public');
                     $photoUrl = Storage::disk('s3')->url($filename);
 
+                    Log::info('📸 Imagem salva com sucesso no S3:', ['url' => $photoUrl]);
+
                 } catch (\Exception $e) {
-                    Log::error('Erro ao salvar imagem base64 no S3: ' . $e->getMessage());
+                    Log::error('❌ Erro ao salvar imagem base64 no S3: ' . $e->getMessage());
 
                     return response()->json([
                         'success' => false,
@@ -59,24 +66,37 @@ class DogRegistrationController extends Controller
                 }
             }
 
-            $dog = Dog::create([
-                'name' => $validated['name'],
-                'age' => $validated['age'] ?? null,
-                'gender' => $validated['gender'] ?? null,
-                'breed' => $validated['breed'] ?? null,
-                'owner_name' => $validated['owner_name'],
-                'phone' => $validated['phone'],
-                'email' => $validated['email'] ?? null,
-                'photo_url' => $photoUrl,
-                'status' => 'em_casa',
-                'show_phone' => true,
-            ]);
+            try {
+                $dog = Dog::create([
+                    'name' => $validated['name'],
+                    'age' => $validated['age'] ?? null,
+                    'gender' => $validated['gender'] ?? null,
+                    'breed' => $validated['breed'] ?? null,
+                    'owner_name' => $validated['owner_name'],
+                    'phone' => $validated['phone'],
+                    'email' => $validated['email'] ?? null,
+                    'photo_url' => $photoUrl,
+                    'status' => 'em_casa',
+                    'show_phone' => true,
+                ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Animal registrado com sucesso!',
-                'data' => $dog
-            ]);
+                Log::info('✅ Cão registrado com sucesso no banco de dados.', ['dog_id' => $dog->id]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Animal registrado com sucesso!',
+                    'data' => $dog
+                ]);
+            } catch (\Exception $e) {
+                Log::error('❌ Falha ao criar o registro no banco: ' . $e->getMessage());
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao salvar os dados do animal no banco.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+
         } catch (\Throwable $e) {
             Log::error('🐛 ERRO GERAL NO REGISTRO DE CÃO: ' . $e->getMessage());
 
