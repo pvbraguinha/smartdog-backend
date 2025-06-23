@@ -12,16 +12,13 @@ class DogRegistrationController extends Controller
 {
     public function store(Request $request)
     {
-        Log::info('🟢 [1] Chegou no início do método store');
+        Log::info('📥 Iniciando registro de novo animal...');
 
         try {
-            Log::info('🟢 [2] Iniciando validação dos dados');
-
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'age' => 'nullable|string|max:50',
-                // 🔧 Gênero agora aceita qualquer string de até 20 caracteres
-                'gender' => 'nullable|string|max:20',
+                'gender' => 'nullable|in:macho,femea',
                 'breed' => 'nullable|string|max:100',
                 'owner_name' => 'required|string|max:255',
                 'phone' => 'required|string|max:20',
@@ -29,14 +26,12 @@ class DogRegistrationController extends Controller
                 'photo_base64' => 'nullable|string'
             ]);
 
-            Log::info('✅ [3] Validação concluída com sucesso.', $validated);
+            Log::info('✅ Dados validados com sucesso.', $validated);
 
             $photoUrl = null;
 
             if (!empty($validated['photo_base64'])) {
                 try {
-                    Log::info('🟡 [4] Iniciando tratamento da imagem base64');
-
                     $base64String = $validated['photo_base64'];
 
                     if (str_starts_with($base64String, 'data:image')) {
@@ -46,7 +41,7 @@ class DogRegistrationController extends Controller
                     $imageData = base64_decode($base64String);
 
                     if ($imageData === false) {
-                        Log::warning('⚠️ [4.1] base64_decode falhou.');
+                        Log::warning('⚠️ base64_decode falhou.');
                         return response()->json([
                             'success' => false,
                             'message' => 'Erro ao decodificar a imagem enviada.'
@@ -57,10 +52,10 @@ class DogRegistrationController extends Controller
                     Storage::disk('s3')->put($filename, $imageData, 'public');
                     $photoUrl = Storage::disk('s3')->url($filename);
 
-                    Log::info('📸 [4.2] Imagem salva com sucesso no S3', ['url' => $photoUrl]);
+                    Log::info('📸 Imagem salva com sucesso no S3:', ['url' => $photoUrl]);
 
                 } catch (\Exception $e) {
-                    Log::error('❌ [4.3] Erro ao salvar imagem base64 no S3: ' . $e->getMessage());
+                    Log::error('❌ Erro ao salvar imagem base64 no S3: ' . $e->getMessage());
 
                     return response()->json([
                         'success' => false,
@@ -71,8 +66,6 @@ class DogRegistrationController extends Controller
             }
 
             try {
-                Log::info('🟢 [5] Preparando dados para o banco');
-
                 $dogData = [
                     'name' => $validated['name'],
                     'age' => $validated['age'] ?? null,
@@ -86,11 +79,11 @@ class DogRegistrationController extends Controller
                     'show_phone' => true,
                 ];
 
-                Log::info('📦 [5.1] Dados enviados para Dog::create():', $dogData);
+                Log::info('📦 Dados a serem salvos no banco (Dog::create): ' . json_encode($dogData));
 
                 $dog = Dog::create($dogData);
 
-                Log::info('✅ [6] Cão registrado com sucesso no banco de dados.', ['dog_id' => $dog->id]);
+                Log::info('✅ Cão registrado com sucesso no banco de dados.', ['dog_id' => $dog->id]);
 
                 return response()->json([
                     'success' => true,
@@ -98,7 +91,7 @@ class DogRegistrationController extends Controller
                     'data' => $dog
                 ]);
             } catch (\Exception $e) {
-                Log::error('❌ [6.1] Falha ao criar o registro no banco: ' . $e->getMessage());
+                Log::error('❌ Falha ao criar o registro no banco: ' . $e->getMessage());
 
                 return response()->json([
                     'success' => false,
@@ -108,7 +101,7 @@ class DogRegistrationController extends Controller
             }
 
         } catch (\Throwable $e) {
-            Log::error('🐛 [7] ERRO GERAL NO REGISTRO DE CÃO: ' . $e->getMessage());
+            Log::error('🐛 ERRO GERAL NO REGISTRO DE CÃO: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
