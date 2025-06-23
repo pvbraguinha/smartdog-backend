@@ -67,7 +67,7 @@ class DogRegistrationController extends Controller
             }
 
             try {
-                $dog = Dog::create([
+                $dogData = [
                     'name' => $validated['name'],
                     'age' => $validated['age'] ?? null,
                     'gender' => $validated['gender'] ?? null,
@@ -78,7 +78,11 @@ class DogRegistrationController extends Controller
                     'photo_url' => $photoUrl,
                     'status' => 'em_casa',
                     'show_phone' => true,
-                ]);
+                ];
+
+                Log::info('📦 Dados enviados para Dog::create():', $dogData);
+
+                $dog = Dog::create($dogData);
 
                 Log::info('✅ Cão registrado com sucesso no banco de dados.', ['dog_id' => $dog->id]);
 
