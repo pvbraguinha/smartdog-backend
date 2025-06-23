@@ -40,13 +40,22 @@ class SnoutCompareController extends Controller
             $userUri = $uploadFile->getRealPath();
         }
 
-        $allPaths = Storage::disk('s3')->allFiles('focinhos-smartdog');
-        $refs     = array_filter($allPaths, fn($p) => !Str::startsWith($p, 'focinhos-smartdog/tmp/'));
+        // ✅ NOVO: só compara com imagens que já estão cadastradas no banco
+        $allDogsWithPhoto = Dog::whereNotNull('photo_url')->pluck('photo_url')->toArray();
+
+        // Extrai os paths internos a partir da URL pública
+        $validPaths = array_map(function ($url) {
+            return Str::after($url, 'focinhos-smartdog/');
+        }, $allDogsWithPhoto);
+
+        $refs = array_map(function ($relPath) {
+            return 'focinhos-smartdog/' . $relPath;
+        }, $validPaths);
 
         if (empty($refs)) {
             return response()->json([
                 'recognized' => false,
-                'message'    => 'Não há imagens de referência cadastradas.',
+                'message'    => 'Não há focinhos cadastrados com dados no sistema.',
             ], 404);
         }
 
@@ -128,7 +137,7 @@ class SnoutCompareController extends Controller
                 'name'          => $dog->name,
                 'age'           => $dog->age,
                 'sex'           => $dog->sex,
-                'status'        => $dog->status,
+                'status'        => str_replace('_', ' ', $dog->status), // ✅ removendo underline
                 'phone_visible' => $dog->phone_visible,
                 'owner_phone'   => $dog->owner_phone,
                 'photo_url'     => $dog->photo_url,
