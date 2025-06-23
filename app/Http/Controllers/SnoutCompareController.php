@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use GuzzleHttp\Client;
 use GuzzleHttp\Promise;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 class SnoutCompareController extends Controller
 {
@@ -48,8 +49,8 @@ class SnoutCompareController extends Controller
             try {
                 $promises[$dog->id] = $client->postAsync('https://api-cn.faceplusplus.com/imagepp/v2/dognosecompare', [
                     'multipart' => [
-                        ['name' => 'api_key', 'contents' => env('MEGVI_API_KEY')],
-                        ['name' => 'api_secret', 'contents' => env('MEGVI_API_SECRET')],
+                        ['name' => 'api_key', 'contents' => Config::get('services.megvi.key')],
+                        ['name' => 'api_secret', 'contents' => Config::get('services.megvi.secret')],
                         ['name' => 'image_file', 'contents' => fopen($meta['uri'], 'r')],
                         ['name' => 'image_ref_file', 'contents' => fopen($metaRef['uri'], 'r')],
                     ]

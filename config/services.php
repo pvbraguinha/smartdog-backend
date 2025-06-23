@@ -29,3 +29,9 @@ return [
     ],
 
 ];
+
+    'megvi' => [
+        'key' => env('MEGVI_API_KEY'),
+        'secret' => env('MEGVI_API_SECRET'),
+    ],
+
